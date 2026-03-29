@@ -1,0 +1,337 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:reusable_checklists/data/models/checklist.dart';
+import 'package:reusable_checklists/data/models/checklist_item.dart';
+import 'package:reusable_checklists/data/repositories/checklist_repository.dart';
+import 'package:reusable_checklists/viewmodels/checklist_detail_viewmodel.dart';
+
+class MockChecklistRepository extends Mock implements ChecklistRepository {}
+
+void main() {
+  late MockChecklistRepository mockRepository;
+  late ChecklistDetailViewModel viewModel;
+
+  setUp(() {
+    mockRepository = MockChecklistRepository();
+    viewModel = ChecklistDetailViewModel(mockRepository);
+  });
+
+  setUpAll(() {
+    registerFallbackValue(Checklist(
+      id: 'fallback',
+      name: 'fallback',
+      createdAt: DateTime(2024),
+    ));
+  });
+
+  Checklist makeChecklist({List<ChecklistItem>? items}) {
+    return Checklist(
+      id: '1',
+      name: 'Test',
+      createdAt: DateTime(2024),
+      items: items ??
+          [
+            ChecklistItem(id: 'a', title: 'Item A', sortIndex: 0),
+            ChecklistItem(id: 'b', title: 'Item B', sortIndex: 1),
+            ChecklistItem(id: 'c', title: 'Item C', sortIndex: 2),
+          ],
+    );
+  }
+
+  group('ChecklistDetailViewModel', () {
+    group('loadChecklist', () {
+      test('loads checklist from repository', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+
+        expect(viewModel.checklist, isNotNull);
+        expect(viewModel.checklist!.name, 'Test');
+      });
+
+      test('sets errorMessage on failure', () async {
+        when(() => mockRepository.getChecklistById('1'))
+            .thenThrow(Exception('Load failed'));
+
+        await viewModel.loadChecklist('1');
+
+        expect(viewModel.errorMessage, contains('Load failed'));
+      });
+    });
+
+    group('sortedItems', () {
+      test('returns empty list when checklist is null', () {
+        expect(viewModel.sortedItems, isEmpty);
+      });
+
+      test('returns items sorted by sortIndex', () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(id: 'b', title: 'B', sortIndex: 2),
+          ChecklistItem(id: 'a', title: 'A', sortIndex: 0),
+          ChecklistItem(id: 'c', title: 'C', sortIndex: 1),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+
+        expect(viewModel.sortedItems.map((i) => i.title).toList(),
+            ['A', 'C', 'B']);
+      });
+    });
+
+    group('addItem', () {
+      test('adds item and persists', () async {
+        final checklist = makeChecklist(items: []);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.addItem('New Item');
+
+        expect(viewModel.checklist!.items.length, 1);
+        expect(viewModel.checklist!.items.first.title, 'New Item');
+        expect(viewModel.checklist!.items.first.sortIndex, 0);
+        verify(() => mockRepository.saveChecklist(any())).called(1);
+      });
+
+      test('does nothing when checklist is null', () async {
+        await viewModel.addItem('Test');
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('sets errorMessage on failure', () async {
+        final checklist = makeChecklist(items: []);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenThrow(Exception('Save failed'));
+
+        await viewModel.loadChecklist('1');
+        await viewModel.addItem('Test');
+
+        expect(viewModel.errorMessage, contains('Save failed'));
+      });
+    });
+
+    group('removeItem', () {
+      test('removes item and reindexes', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.removeItem('b');
+
+        expect(viewModel.checklist!.items.length, 2);
+        expect(
+            viewModel.checklist!.items.any((i) => i.id == 'b'), false);
+        // Verify reindexing
+        final sorted = viewModel.sortedItems;
+        expect(sorted[0].sortIndex, 0);
+        expect(sorted[1].sortIndex, 1);
+      });
+
+      test('does nothing when checklist is null', () async {
+        await viewModel.removeItem('a');
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('sets errorMessage on failure', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenThrow(Exception('Remove failed'));
+
+        await viewModel.loadChecklist('1');
+        await viewModel.removeItem('a');
+
+        expect(viewModel.errorMessage, contains('Remove failed'));
+      });
+    });
+
+    group('toggleItem', () {
+      test('toggles item check state', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.toggleItem('a');
+
+        expect(
+            viewModel.checklist!.items.firstWhere((i) => i.id == 'a').isChecked,
+            true);
+      });
+
+      test('toggles back to unchecked', () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(
+              id: 'a', title: 'A', sortIndex: 0, isChecked: true),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.toggleItem('a');
+
+        expect(
+            viewModel.checklist!.items.first.isChecked, false);
+      });
+
+      test('does nothing when checklist is null', () async {
+        await viewModel.toggleItem('a');
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('sets errorMessage on failure', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenThrow(Exception('Toggle failed'));
+
+        await viewModel.loadChecklist('1');
+        await viewModel.toggleItem('a');
+
+        expect(viewModel.errorMessage, contains('Toggle failed'));
+      });
+    });
+
+    group('checkAll', () {
+      test('checks all items', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.checkAll();
+
+        expect(viewModel.checklist!.items.every((i) => i.isChecked), true);
+      });
+
+      test('does nothing when checklist is null', () async {
+        await viewModel.checkAll();
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('sets errorMessage on failure', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenThrow(Exception('CheckAll failed'));
+
+        await viewModel.loadChecklist('1');
+        await viewModel.checkAll();
+
+        expect(viewModel.errorMessage, contains('CheckAll failed'));
+      });
+    });
+
+    group('uncheckAll', () {
+      test('unchecks all items', () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(
+              id: 'a', title: 'A', sortIndex: 0, isChecked: true),
+          ChecklistItem(
+              id: 'b', title: 'B', sortIndex: 1, isChecked: true),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.uncheckAll();
+
+        expect(viewModel.checklist!.items.every((i) => !i.isChecked), true);
+      });
+
+      test('does nothing when checklist is null', () async {
+        await viewModel.uncheckAll();
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('sets errorMessage on failure', () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(
+              id: 'a', title: 'A', sortIndex: 0, isChecked: true),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenThrow(Exception('UncheckAll failed'));
+
+        await viewModel.loadChecklist('1');
+        await viewModel.uncheckAll();
+
+        expect(viewModel.errorMessage, contains('UncheckAll failed'));
+      });
+    });
+
+    group('reorderItems', () {
+      test('moves item from index 0 to index 2', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.reorderItems(0, 3); // move A after C
+
+        final sorted = viewModel.sortedItems;
+        expect(sorted.map((i) => i.title).toList(), ['Item B', 'Item C', 'Item A']);
+        expect(sorted[0].sortIndex, 0);
+        expect(sorted[1].sortIndex, 1);
+        expect(sorted[2].sortIndex, 2);
+      });
+
+      test('moves item from index 2 to index 0', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.reorderItems(2, 0); // move C before A
+
+        final sorted = viewModel.sortedItems;
+        expect(sorted.map((i) => i.title).toList(), ['Item C', 'Item A', 'Item B']);
+      });
+
+      test('does nothing when checklist is null', () async {
+        await viewModel.reorderItems(0, 1);
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('sets errorMessage on failure', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenThrow(Exception('Reorder failed'));
+
+        await viewModel.loadChecklist('1');
+        await viewModel.reorderItems(0, 2);
+
+        expect(viewModel.errorMessage, contains('Reorder failed'));
+      });
+    });
+  });
+}
