@@ -19,7 +19,6 @@ void main() {
             body: ChecklistTile(
               checklist: checklist,
               onTap: () {},
-              onDelete: () {},
             ),
           ),
         ),
@@ -45,7 +44,6 @@ void main() {
             body: ChecklistTile(
               checklist: checklist,
               onTap: () {},
-              onDelete: () {},
             ),
           ),
         ),
@@ -67,7 +65,6 @@ void main() {
             body: ChecklistTile(
               checklist: checklist,
               onTap: () {},
-              onDelete: () {},
             ),
           ),
         ),
@@ -90,7 +87,6 @@ void main() {
             body: ChecklistTile(
               checklist: checklist,
               onTap: () => tapped = true,
-              onDelete: () {},
             ),
           ),
         ),
@@ -100,8 +96,8 @@ void main() {
       expect(tapped, true);
     });
 
-    testWidgets('calls onDelete when delete icon tapped', (tester) async {
-      var deleted = false;
+    testWidgets('calls onLongPress on long press', (tester) async {
+      var longPressed = false;
       final checklist = Checklist(
         id: '1',
         name: 'Groceries',
@@ -114,14 +110,86 @@ void main() {
             body: ChecklistTile(
               checklist: checklist,
               onTap: () {},
-              onDelete: () => deleted = true,
+              onLongPress: () => longPressed = true,
             ),
           ),
         ),
       );
 
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      expect(deleted, true);
+      await tester.longPress(find.text('Groceries'));
+      expect(longPressed, true);
+    });
+
+    testWidgets('shows checkbox when in selection mode', (tester) async {
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ChecklistTile(
+              checklist: checklist,
+              onTap: () {},
+              isSelectionMode: true,
+              isSelected: false,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Checkbox), findsOneWidget);
+    });
+
+    testWidgets('calls onSelectionTap when tapped in selection mode',
+        (tester) async {
+      var selectionTapped = false;
+      var normalTapped = false;
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ChecklistTile(
+              checklist: checklist,
+              onTap: () => normalTapped = true,
+              isSelectionMode: true,
+              onSelectionTap: () => selectionTapped = true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Groceries'));
+      expect(selectionTapped, true);
+      expect(normalTapped, false);
+    });
+
+    testWidgets('does not show checkbox in normal mode', (tester) async {
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ChecklistTile(
+              checklist: checklist,
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Checkbox), findsNothing);
     });
   });
 }

@@ -128,7 +128,60 @@ void main() {
       verify(() => mockVm.createChecklist('New List')).called(1);
     });
 
-    testWidgets('delete shows snackbar with undo', (tester) async {
+    testWidgets('long press enters selection mode', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      await tester.longPress(find.text('Groceries'));
+      await tester.pump();
+
+      expect(find.text('1 selected'), findsOneWidget);
+      expect(find.byIcon(Icons.close), findsOneWidget);
+      expect(find.byType(Checkbox), findsOneWidget);
+    });
+
+    testWidgets('tapping tiles in selection mode toggles selection',
+        (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+        Checklist(id: '2', name: 'Travel', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      await tester.longPress(find.text('Groceries'));
+      await tester.pump();
+      expect(find.text('1 selected'), findsOneWidget);
+
+      await tester.tap(find.text('Travel'));
+      await tester.pump();
+      expect(find.text('2 selected'), findsOneWidget);
+    });
+
+    testWidgets('close button exits selection mode', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      await tester.longPress(find.text('Groceries'));
+      await tester.pump();
+      expect(find.text('1 selected'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pump();
+      expect(find.text(AppStrings.appTitle), findsOneWidget);
+      expect(find.byType(Checkbox), findsNothing);
+    });
+
+    testWidgets('delete selected shows snackbar with undo', (tester) async {
       final checklist =
           Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024));
       when(() => mockVm.isLoading).thenReturn(false);
@@ -137,14 +190,18 @@ void main() {
 
       await tester.pumpWidget(buildApp(mockVm));
 
+      await tester.longPress(find.text('Groceries'));
+      await tester.pump();
+
       await tester.tap(find.byIcon(Icons.delete_outline));
       await tester.pump();
 
+      verify(() => mockVm.deleteChecklist('1')).called(1);
       expect(find.text(AppStrings.checklistDeleted), findsOneWidget);
       expect(find.text(AppStrings.undo), findsOneWidget);
     });
 
-    testWidgets('undo action calls saveChecklist', (tester) async {
+    testWidgets('undo after delete calls saveChecklist', (tester) async {
       final checklist =
           Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024));
       when(() => mockVm.isLoading).thenReturn(false);
@@ -154,6 +211,9 @@ void main() {
 
       await tester.pumpWidget(buildApp(mockVm));
 
+      await tester.longPress(find.text('Groceries'));
+      await tester.pump();
+
       await tester.tap(find.byIcon(Icons.delete_outline));
       await tester.pumpAndSettle();
 
@@ -161,6 +221,20 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockVm.saveChecklist(checklist)).called(1);
+    });
+
+    testWidgets('FAB is hidden during selection mode', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+
+      await tester.longPress(find.text('Groceries'));
+      await tester.pumpAndSettle();
+      expect(find.byType(FloatingActionButton), findsNothing);
     });
   });
 }
