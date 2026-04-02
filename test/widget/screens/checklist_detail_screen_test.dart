@@ -30,10 +30,21 @@ void main() {
     when(() => mockVm.errorMessage).thenReturn(null);
   });
 
+  /// Helper to stub all list getters on the mock VM.
+  void stubItems(
+    MockChecklistDetailViewModel vm, {
+    List<ChecklistItem> unchecked = const [],
+    List<ChecklistItem> checked = const [],
+  }) {
+    when(() => vm.sortedItems).thenReturn([...unchecked, ...checked]);
+    when(() => vm.uncheckedItems).thenReturn(unchecked);
+    when(() => vm.checkedItems).thenReturn(checked);
+  }
+
   group('ChecklistDetailScreen', () {
     testWidgets('shows loading when checklist is null', (tester) async {
       when(() => mockVm.checklist).thenReturn(null);
-      when(() => mockVm.sortedItems).thenReturn([]);
+      stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
 
@@ -44,7 +55,7 @@ void main() {
       when(() => mockVm.checklist).thenReturn(
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
       );
-      when(() => mockVm.sortedItems).thenReturn([]);
+      stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
 
@@ -55,14 +66,14 @@ void main() {
       when(() => mockVm.checklist).thenReturn(
         Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
       );
-      when(() => mockVm.sortedItems).thenReturn([]);
+      stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
 
       expect(find.text(AppStrings.emptyItems), findsOneWidget);
     });
 
-    testWidgets('shows items when present', (tester) async {
+    testWidgets('shows unchecked items in main list', (tester) async {
       final items = [
         ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
         ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
@@ -75,19 +86,66 @@ void main() {
           items: items,
         ),
       );
-      when(() => mockVm.sortedItems).thenReturn(items);
+      stubItems(mockVm, unchecked: items);
 
       await tester.pumpWidget(buildApp(mockVm));
 
       expect(find.text('Milk'), findsOneWidget);
       expect(find.text('Eggs'), findsOneWidget);
+      expect(find.text('Completed'), findsNothing);
+    });
+
+    testWidgets('shows Completed section when checked items exist',
+        (tester) async {
+      final unchecked = [
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+      ];
+      final checked = [
+        ChecklistItem(
+            id: 'b', title: 'Bread', sortIndex: 1, isChecked: true),
+      ];
+      when(() => mockVm.checklist).thenReturn(
+        Checklist(
+          id: '1',
+          name: 'Test',
+          createdAt: DateTime(2024),
+          items: [...unchecked, ...checked],
+        ),
+      );
+      stubItems(mockVm, unchecked: unchecked, checked: checked);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      expect(find.text('Milk'), findsOneWidget);
+      expect(find.text('Bread'), findsOneWidget);
+      expect(find.text('Completed'), findsOneWidget);
+    });
+
+    testWidgets('hides Completed header when no checked items',
+        (tester) async {
+      final items = [
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+      ];
+      when(() => mockVm.checklist).thenReturn(
+        Checklist(
+          id: '1',
+          name: 'Test',
+          createdAt: DateTime(2024),
+          items: items,
+        ),
+      );
+      stubItems(mockVm, unchecked: items);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      expect(find.text('Completed'), findsNothing);
     });
 
     testWidgets('shows Check All and Uncheck All buttons', (tester) async {
       when(() => mockVm.checklist).thenReturn(
         Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
       );
-      when(() => mockVm.sortedItems).thenReturn([]);
+      stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
 
@@ -107,7 +165,7 @@ void main() {
           items: items,
         ),
       );
-      when(() => mockVm.sortedItems).thenReturn(items);
+      stubItems(mockVm, unchecked: items);
       when(() => mockVm.checkAll()).thenAnswer((_) async {});
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -128,7 +186,7 @@ void main() {
           items: items,
         ),
       );
-      when(() => mockVm.sortedItems).thenReturn(items);
+      stubItems(mockVm, unchecked: items);
       when(() => mockVm.uncheckAll()).thenAnswer((_) async {});
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -141,7 +199,7 @@ void main() {
       when(() => mockVm.checklist).thenReturn(
         Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
       );
-      when(() => mockVm.sortedItems).thenReturn([]);
+      stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
 
@@ -149,12 +207,26 @@ void main() {
       expect(find.text(AppStrings.addItem), findsOneWidget);
     });
 
+    testWidgets('TextField uses sentence capitalization', (tester) async {
+      when(() => mockVm.checklist).thenReturn(
+        Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
+      );
+      stubItems(mockVm);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      final textField =
+          tester.widget<TextField>(find.byType(TextField));
+      expect(
+          textField.textCapitalization, TextCapitalization.sentences);
+    });
+
     testWidgets('add item button calls addItem and clears input',
         (tester) async {
       when(() => mockVm.checklist).thenReturn(
         Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
       );
-      when(() => mockVm.sortedItems).thenReturn([]);
+      stubItems(mockVm);
       when(() => mockVm.addItem(any())).thenAnswer((_) async {});
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -169,7 +241,7 @@ void main() {
       when(() => mockVm.checklist).thenReturn(
         Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
       );
-      when(() => mockVm.sortedItems).thenReturn([]);
+      stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
 
@@ -190,7 +262,7 @@ void main() {
           items: items,
         ),
       );
-      when(() => mockVm.sortedItems).thenReturn(items);
+      stubItems(mockVm, unchecked: items);
       when(() => mockVm.toggleItem('a')).thenAnswer((_) async {});
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -203,7 +275,7 @@ void main() {
       when(() => mockVm.checklist).thenReturn(
         Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
       );
-      when(() => mockVm.sortedItems).thenReturn([]);
+      stubItems(mockVm);
       when(() => mockVm.addItem(any())).thenAnswer((_) async {});
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -226,7 +298,7 @@ void main() {
           items: items,
         ),
       );
-      when(() => mockVm.sortedItems).thenReturn(items);
+      stubItems(mockVm, unchecked: items);
       when(() => mockVm.removeItem('a')).thenAnswer((_) async {});
 
       await tester.pumpWidget(buildApp(mockVm));

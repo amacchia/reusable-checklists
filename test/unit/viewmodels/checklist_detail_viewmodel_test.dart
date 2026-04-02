@@ -283,8 +283,60 @@ void main() {
       });
     });
 
+    group('uncheckedItems and checkedItems', () {
+      test('returns empty lists when checklist is null', () {
+        expect(viewModel.uncheckedItems, isEmpty);
+        expect(viewModel.checkedItems, isEmpty);
+      });
+
+      test('separates items by checked state', () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(id: 'a', title: 'A', sortIndex: 0),
+          ChecklistItem(
+              id: 'b', title: 'B', sortIndex: 1, isChecked: true),
+          ChecklistItem(id: 'c', title: 'C', sortIndex: 2),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+
+        expect(viewModel.uncheckedItems.map((i) => i.title).toList(),
+            ['A', 'C']);
+        expect(
+            viewModel.checkedItems.map((i) => i.title).toList(), ['B']);
+      });
+
+      test('all unchecked when none are checked', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+
+        expect(viewModel.uncheckedItems.length, 3);
+        expect(viewModel.checkedItems, isEmpty);
+      });
+
+      test('all checked when everything is checked', () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(
+              id: 'a', title: 'A', sortIndex: 0, isChecked: true),
+          ChecklistItem(
+              id: 'b', title: 'B', sortIndex: 1, isChecked: true),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+
+        expect(viewModel.uncheckedItems, isEmpty);
+        expect(viewModel.checkedItems.length, 2);
+      });
+    });
+
     group('reorderItems', () {
-      test('moves item from index 0 to index 2', () async {
+      test('moves unchecked item from index 0 to index 2', () async {
         final checklist = makeChecklist();
         when(() => mockRepository.getChecklistById('1'))
             .thenAnswer((_) async => checklist);
@@ -301,7 +353,7 @@ void main() {
         expect(sorted[2].sortIndex, 2);
       });
 
-      test('moves item from index 2 to index 0', () async {
+      test('moves unchecked item from index 2 to index 0', () async {
         final checklist = makeChecklist();
         when(() => mockRepository.getChecklistById('1'))
             .thenAnswer((_) async => checklist);
@@ -313,6 +365,29 @@ void main() {
 
         final sorted = viewModel.sortedItems;
         expect(sorted.map((i) => i.title).toList(), ['Item C', 'Item A', 'Item B']);
+      });
+
+      test('reorder only affects unchecked items, checked stay at end',
+          () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(id: 'a', title: 'A', sortIndex: 0),
+          ChecklistItem(
+              id: 'b', title: 'B', sortIndex: 1, isChecked: true),
+          ChecklistItem(id: 'c', title: 'C', sortIndex: 2),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        // Unchecked items are [A, C], move C before A
+        await viewModel.reorderItems(1, 0);
+
+        expect(viewModel.uncheckedItems.map((i) => i.title).toList(),
+            ['C', 'A']);
+        expect(
+            viewModel.checkedItems.map((i) => i.title).toList(), ['B']);
       });
 
       test('does nothing when checklist is null', () async {

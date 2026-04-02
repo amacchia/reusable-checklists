@@ -25,6 +25,12 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     return items;
   }
 
+  List<ChecklistItem> get uncheckedItems =>
+      sortedItems.where((i) => !i.isChecked).toList();
+
+  List<ChecklistItem> get checkedItems =>
+      sortedItems.where((i) => i.isChecked).toList();
+
   Future<void> loadChecklist(String id) async {
     _errorMessage = null;
     try {
@@ -116,14 +122,16 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     if (_checklist == null) return;
     _errorMessage = null;
     try {
-      final items = sortedItems;
+      final unchecked = uncheckedItems;
+      final checked = checkedItems;
       if (newIndex > oldIndex) newIndex--;
-      final movedItem = items.removeAt(oldIndex);
-      items.insert(newIndex, movedItem);
-      for (var i = 0; i < items.length; i++) {
-        items[i].sortIndex = i;
+      final movedItem = unchecked.removeAt(oldIndex);
+      unchecked.insert(newIndex, movedItem);
+      final combined = [...unchecked, ...checked];
+      for (var i = 0; i < combined.length; i++) {
+        combined[i].sortIndex = i;
       }
-      _checklist!.items = items;
+      _checklist!.items = combined;
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {

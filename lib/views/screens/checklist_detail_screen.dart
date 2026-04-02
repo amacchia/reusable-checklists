@@ -54,21 +54,7 @@ class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
                               subtitle: AppStrings.emptyItemsSubtitle,
                               icon: Icons.playlist_add,
                             )
-                          : ReorderableListView.builder(
-                              padding: EdgeInsets.zero,
-                              itemCount: items.length,
-                              onReorder: vm.reorderItems,
-                              itemBuilder: (context, index) {
-                                final item = items[index];
-                                return ChecklistItemTile(
-                                  key: ValueKey(item.id),
-                                  item: item,
-                                  onToggle: () => vm.toggleItem(item.id),
-                                  onDelete: () =>
-                                      _deleteItem(context, vm, item.id),
-                                );
-                              },
-                            ),
+                          : _buildItemLists(context, vm),
                     ),
                     _buildAddItemBar(context, vm),
                   ],
@@ -100,6 +86,7 @@ class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
                   hintText: AppStrings.addItem,
                   border: InputBorder.none,
                 ),
+                textCapitalization: TextCapitalization.sentences,
                 onSubmitted: (_) => _addItem(vm),
               ),
             ),
@@ -110,6 +97,60 @@ class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildItemLists(
+      BuildContext context, ChecklistDetailViewModel vm) {
+    final unchecked = vm.uncheckedItems;
+    final checked = vm.checkedItems;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return CustomScrollView(
+      slivers: [
+        SliverReorderableList(
+          itemCount: unchecked.length,
+          onReorder: vm.reorderItems,
+          itemBuilder: (context, index) {
+            final item = unchecked[index];
+            return ChecklistItemTile(
+              key: ValueKey(item.id),
+              item: item,
+              onToggle: () => vm.toggleItem(item.id),
+              onDelete: () => _deleteItem(context, vm, item.id),
+            );
+          },
+        ),
+        if (checked.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: Text(
+                'Completed',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.outline,
+                ),
+              ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final item = checked[index];
+                return ChecklistItemTile(
+                  key: ValueKey(item.id),
+                  item: item,
+                  onToggle: () => vm.toggleItem(item.id),
+                  onDelete: () => _deleteItem(context, vm, item.id),
+                );
+              },
+              childCount: checked.length,
+            ),
+          ),
+        ],
+      ],
     );
   }
 
