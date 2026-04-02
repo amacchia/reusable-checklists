@@ -28,6 +28,7 @@ class _NewChecklistDialogState extends State<NewChecklistDialog> {
         decoration: const InputDecoration(
           hintText: AppStrings.checklistName,
         ),
+        textCapitalization: TextCapitalization.words,
         onChanged: (_) => setState(() {}),
         onSubmitted: (_) => _submit(),
       ),

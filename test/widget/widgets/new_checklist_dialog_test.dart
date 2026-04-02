@@ -24,10 +24,12 @@ void main() {
 
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
+      final textField = tester.widget<TextField>(find.byType(TextField)); 
 
       expect(find.text(AppStrings.newChecklist), findsOneWidget);
       expect(find.text(AppStrings.cancel), findsOneWidget);
       expect(find.text(AppStrings.create), findsOneWidget);
+      expect(textField.textCapitalization, TextCapitalization.words);
     });
 
     testWidgets('create button disabled when text is empty', (tester) async {
