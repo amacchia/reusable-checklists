@@ -24,8 +24,11 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   Hive.registerAdapters();
-  await Hive.openBox<Checklist>('checklists');
-  final prefs = await SharedPreferences.getInstance();
+  final results = await Future.wait([
+    Hive.openBox<Checklist>('checklists'),
+    SharedPreferences.getInstance(),
+  ]);
+  final prefs = results[1] as SharedPreferences;
   runApp(MainApp(prefs: prefs));
 }
 
