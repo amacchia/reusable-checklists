@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../viewmodels/theme_viewmodel.dart';
@@ -54,6 +55,17 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.code),
+            title: const Text(AppStrings.sourceCode),
+            onTap: () {
+              launchUrl(
+                Uri.parse(AppStrings.sourceCodeUrl),
+                mode: LaunchMode.externalApplication,
+              );
+            },
           ),
         ],
       ),

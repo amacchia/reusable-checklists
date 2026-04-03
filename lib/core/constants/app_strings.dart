@@ -23,4 +23,6 @@ class AppStrings {
   static const themeSystem = 'System';
   static const themeLight = 'Light';
   static const themeDark = 'Dark';
+  static const sourceCode = 'Source Code';
+  static const sourceCodeUrl = 'https://github.com/amacchia/reusable-checklists';
 }
