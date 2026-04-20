@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Verify 95% test coverage
+        run: |
+          sudo apt-get install -y lcov > /dev/null 2>&1
+          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep 'lines' | grep -oP '[\d.]+%')
+          echo "Line coverage: $COVERAGE"
+          if [ "$COVERAGE" != "95.0%" ]; then
+            echo "::error::Test coverage is $COVERAGE, expected 95.0%"
+            lcov --list coverage/lcov.info
+            exit 1
+          fi

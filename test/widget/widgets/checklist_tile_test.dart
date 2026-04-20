@@ -171,6 +171,32 @@ void main() {
       expect(normalTapped, false);
     });
 
+    testWidgets('checkbox onChanged calls onSelectionTap', (tester) async {
+      var selectionTapped = false;
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ChecklistTile(
+              checklist: checklist,
+              onTap: () {},
+              isSelectionMode: true,
+              onSelectionTap: () => selectionTapped = true,
+            ),
+          ),
+        ),
+      );
+
+      // Tap the Checkbox widget directly to trigger onChanged.
+      await tester.tap(find.byType(Checkbox));
+      expect(selectionTapped, true);
+    });
+
     testWidgets('does not show checkbox in normal mode', (tester) async {
       final checklist = Checklist(
         id: '1',

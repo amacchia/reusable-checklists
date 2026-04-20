@@ -103,6 +103,65 @@ void main() {
       expect(result, isNull);
     });
 
+    test('reopens box and deserializes persisted checklist with items',
+        () async {
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+        items: [
+          ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+          ChecklistItem(
+            id: 'b',
+            title: 'Eggs',
+            sortIndex: 1,
+            isChecked: true,
+          ),
+        ],
+      );
+      await repository.saveChecklist(checklist);
+
+      // Close and reopen the box to force deserialization via the
+      // generated TypeAdapter.read methods.
+      await box.close();
+      box = await Hive.openBox<Checklist>('checklists');
+      repository = HiveChecklistRepository(box);
+
+      final result = await repository.getChecklistById('1');
+      expect(result, isNotNull);
+      expect(result!.name, 'Groceries');
+      expect(result.createdAt, DateTime(2024));
+      expect(result.items.length, 2);
+      expect(result.items[0].title, 'Milk');
+      expect(result.items[0].isChecked, false);
+      expect(result.items[0].sortIndex, 0);
+      expect(result.items[1].title, 'Eggs');
+      expect(result.items[1].isChecked, true);
+      expect(result.items[1].sortIndex, 1);
+    });
+
+    test('ChecklistAdapter equality and hashCode', () {
+      final a = ChecklistAdapter();
+      final b = ChecklistAdapter();
+
+      expect(a == a, isTrue);
+      expect(a == b, isTrue);
+      // ignore: unrelated_type_equality_checks
+      expect(a == 'not an adapter', isFalse);
+      expect(a.hashCode, b.hashCode);
+    });
+
+    test('ChecklistItemAdapter equality and hashCode', () {
+      final a = ChecklistItemAdapter();
+      final b = ChecklistItemAdapter();
+
+      expect(a == a, isTrue);
+      expect(a == b, isTrue);
+      // ignore: unrelated_type_equality_checks
+      expect(a == 'not an adapter', isFalse);
+      expect(a.hashCode, b.hashCode);
+    });
+
     test('persists checklist with items', () async {
       final checklist = Checklist(
         id: '1',

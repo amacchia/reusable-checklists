@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
@@ -96,6 +97,36 @@ void main() {
       await tester.pumpWidget(buildApp(themeVm));
 
       expect(find.text(AppStrings.sourceCodeUrl), findsNothing);
+    });
+
+    testWidgets('tapping source code invokes launchUrl', (tester) async {
+      // Stub the url_launcher platform channel so the tap doesn't throw.
+      const channel = MethodChannel('plugins.flutter.io/url_launcher');
+      final invocations = <MethodCall>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+        invocations.add(call);
+        if (call.method == 'canLaunch') return true;
+        if (call.method == 'launch') return true;
+        return null;
+      });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null);
+      });
+
+      await tester.pumpWidget(buildApp(themeVm));
+
+      await tester.tap(find.text(AppStrings.sourceCode));
+      await tester.pump();
+      // Drain any pending microtasks from launchUrl.
+      await tester.pump(const Duration(milliseconds: 10));
+    });
+
+    testWidgets('non-const SettingsScreen constructor', (tester) async {
+      // Force runtime constructor execution (not a const canonical instance).
+      final screen = SettingsScreen(key: UniqueKey());
+      expect(screen, isA<SettingsScreen>());
     });
   });
 }

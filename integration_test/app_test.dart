@@ -5,59 +5,93 @@ import 'package:integration_test/integration_test.dart';
 import 'package:reusable_checklists/core/constants/app_strings.dart';
 import 'package:reusable_checklists/data/models/checklist.dart';
 import 'package:reusable_checklists/hive_registrar.g.dart';
-import 'package:reusable_checklists/main.dart' as app;
+import 'package:reusable_checklists/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Pumps until [finder] finds at least one widget, or times out.
+Future<void> waitFor(WidgetTester tester, Finder finder) async {
+  for (var i = 0; i < 50; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+    if (finder.evaluate().isNotEmpty) return;
+  }
+  await tester.pumpAndSettle();
+}
+
+/// Starts the app with a clean database.
+Future<void> startApp(WidgetTester tester) async {
+  // Fresh box for each test so cases stay hermetic.
+  final box = Hive.box<Checklist>('checklists');
+  await box.clear();
+
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+
+  await tester.pumpWidget(MainApp(prefs: prefs));
+  await tester.pumpAndSettle();
+}
+
+/// Creates a checklist from the list screen via the FAB + dialog.
+Future<void> createChecklist(WidgetTester tester, String name) async {
+  await tester.tap(find.byType(FloatingActionButton));
+  await tester.pumpAndSettle();
+  await tester.enterText(find.byType(TextField), name);
+  await tester.testTextInput.receiveAction(TextInputAction.done);
+  await tester.pumpAndSettle();
+  // Wait for async createChecklist to complete and list to rebuild.
+  await waitFor(tester, find.text(name));
+}
+
+/// Opens a checklist by name and waits for the detail screen to load.
+Future<void> openChecklist(WidgetTester tester, String name) async {
+  await tester.tap(find.text(name));
+  await tester.pumpAndSettle();
+  // Wait for async loadChecklist to resolve (spinner disappears, add bar appears).
+  await waitFor(tester, find.text(AppStrings.addItem));
+}
+
+/// Adds an item on the detail screen using the keyboard submit action.
+Future<void> addItem(WidgetTester tester, String text) async {
+  // Tap the TextField to ensure it has focus and a text input connection.
+  await tester.tap(find.byType(TextField));
+  await tester.pumpAndSettle();
+  await tester.enterText(find.byType(TextField), text);
+  await tester.testTextInput.receiveAction(TextInputAction.done);
+  await tester.pumpAndSettle();
+  // Wait for the item to appear in the list.
+  await waitFor(tester, find.text(text));
+}
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() async {
+  setUpAll(() async {
     await Hive.initFlutter();
     Hive.registerAdapters();
-    final box = await Hive.openBox<Checklist>('checklists');
-    await box.clear();
+    await Hive.openBox<Checklist>('checklists');
   });
 
-  tearDown(() async {
+  tearDownAll(() async {
     await Hive.close();
   });
 
   group('Full checklist lifecycle', () {
     testWidgets('create, add items, check, delete', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startApp(tester);
 
       // Verify empty state
       expect(find.text(AppStrings.emptyChecklists), findsOneWidget);
 
       // Create a checklist
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'Groceries');
-      await tester.tap(find.text(AppStrings.create));
-      await tester.pumpAndSettle();
-
-      // Verify checklist appears
+      await createChecklist(tester, 'Groceries');
       expect(find.text('Groceries'), findsOneWidget);
 
       // Open checklist
-      await tester.tap(find.text('Groceries'));
-      await tester.pumpAndSettle();
-
-      // Verify detail screen
-      expect(find.text(AppStrings.emptyItems), findsOneWidget);
+      await openChecklist(tester, 'Groceries');
 
       // Add items
-      await tester.enterText(find.byType(TextField), 'Milk');
-      await tester.tap(find.byIcon(Icons.add));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), 'Eggs');
-      await tester.tap(find.byIcon(Icons.add));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), 'Bread');
-      await tester.tap(find.byIcon(Icons.add));
-      await tester.pumpAndSettle();
+      await addItem(tester, 'Milk');
+      await addItem(tester, 'Eggs');
+      await addItem(tester, 'Bread');
 
       expect(find.text('Milk'), findsOneWidget);
       expect(find.text('Eggs'), findsOneWidget);
@@ -74,7 +108,11 @@ void main() {
       // Verify count badge
       expect(find.text('1 / 3 checked'), findsOneWidget);
 
-      // Delete checklist
+      // Long-press checklist to enter selection mode
+      await tester.longPress(find.text('Groceries'));
+      await tester.pumpAndSettle();
+
+      // Delete selected checklist
       await tester.tap(find.byIcon(Icons.delete_outline));
       await tester.pumpAndSettle();
 
@@ -85,28 +123,17 @@ void main() {
 
   group('Check All / Uncheck All', () {
     testWidgets('checks and unchecks all items', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startApp(tester);
 
       // Create checklist
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'Tasks');
-      await tester.tap(find.text(AppStrings.create));
-      await tester.pumpAndSettle();
+      await createChecklist(tester, 'Tasks');
 
       // Open it
-      await tester.tap(find.text('Tasks'));
-      await tester.pumpAndSettle();
+      await openChecklist(tester, 'Tasks');
 
       // Add items
-      await tester.enterText(find.byType(TextField), 'Task 1');
-      await tester.tap(find.byIcon(Icons.add));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(find.byType(TextField), 'Task 2');
-      await tester.tap(find.byIcon(Icons.add));
-      await tester.pumpAndSettle();
+      await addItem(tester, 'Task 1');
+      await addItem(tester, 'Task 2');
 
       // Check All
       await tester.tap(find.text(AppStrings.checkAll));

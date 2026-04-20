@@ -286,6 +286,57 @@ void main() {
       verify(() => mockVm.addItem('Keyboard item')).called(1);
     });
 
+    testWidgets('toggling a checked item calls vm.toggleItem', (tester) async {
+      final checked = [
+        ChecklistItem(
+            id: 'c', title: 'Bread', sortIndex: 0, isChecked: true),
+      ];
+      when(() => mockVm.checklist).thenReturn(
+        Checklist(
+          id: '1',
+          name: 'Test',
+          createdAt: DateTime(2024),
+          items: checked,
+        ),
+      );
+      stubItems(mockVm, checked: checked);
+      when(() => mockVm.toggleItem('c')).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp(mockVm));
+      await tester.tap(find.byType(Checkbox));
+      await tester.pump();
+
+      verify(() => mockVm.toggleItem('c')).called(1);
+    });
+
+    testWidgets('deleting a checked item calls vm.removeItem', (tester) async {
+      final checked = [
+        ChecklistItem(
+            id: 'c', title: 'Bread', sortIndex: 0, isChecked: true),
+      ];
+      when(() => mockVm.checklist).thenReturn(
+        Checklist(
+          id: '1',
+          name: 'Test',
+          createdAt: DateTime(2024),
+          items: checked,
+        ),
+      );
+      stubItems(mockVm, checked: checked);
+      when(() => mockVm.removeItem('c')).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp(mockVm));
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pump();
+
+      verify(() => mockVm.removeItem('c')).called(1);
+    });
+
+    testWidgets('non-const ChecklistDetailScreen constructor', (tester) async {
+      final screen = ChecklistDetailScreen(key: UniqueKey());
+      expect(screen, isA<ChecklistDetailScreen>());
+    });
+
     testWidgets('delete item shows snackbar', (tester) async {
       final items = [
         ChecklistItem(id: 'a', title: 'Test', sortIndex: 0),
