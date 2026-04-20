@@ -31,7 +31,7 @@ class ChecklistTile extends StatelessWidget {
       color: isSelected ? colorScheme.primaryContainer : null,
       child: ListTile(
         leading: isSelectionMode
-            ? Checkbox(
+            ? Checkbox.adaptive(
                 value: isSelected,
                 onChanged: (_) => onSelectionTap?.call(),
               )

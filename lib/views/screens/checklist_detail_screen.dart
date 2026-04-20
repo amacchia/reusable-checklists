@@ -44,7 +44,7 @@ class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
             ],
           ),
           body: checklist == null
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator.adaptive())
               : Column(
                   children: [
                     Expanded(

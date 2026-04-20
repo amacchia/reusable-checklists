@@ -20,7 +20,7 @@ class _NewChecklistDialogState extends State<NewChecklistDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return AlertDialog.adaptive(
       title: const Text(AppStrings.newChecklist),
       content: TextField(
         controller: _controller,

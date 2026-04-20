@@ -146,7 +146,7 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
 
   Widget _buildBody(ChecklistListViewModel vm) {
     if (vm.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator.adaptive());
     }
     if (vm.checklists.isEmpty) {
       return const EmptyStateWidget(
@@ -176,7 +176,7 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
 
   Future<void> _showNewChecklistDialog(BuildContext context) async {
     final vm = context.read<ChecklistListViewModel>();
-    final name = await showDialog<String>(
+    final name = await showAdaptiveDialog<String>(
       context: context,
       builder: (_) => const NewChecklistDialog(),
     );

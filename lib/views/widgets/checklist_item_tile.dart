@@ -22,7 +22,7 @@ class ChecklistItemTile extends StatelessWidget {
       children: [
         ListTile(
           onTap: onToggle,
-          leading: Checkbox(
+          leading: Checkbox.adaptive(
             value: item.isChecked,
             onChanged: (_) => onToggle(),
           ),
