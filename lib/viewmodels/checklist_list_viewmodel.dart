@@ -19,6 +19,12 @@ class ChecklistListViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  void clearError() {
+    if (_errorMessage == null) return;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> loadChecklists() async {
     _isLoading = true;
     _errorMessage = null;

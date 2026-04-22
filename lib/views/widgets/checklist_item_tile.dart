@@ -5,12 +5,14 @@ import '../../data/models/checklist_item.dart';
 class ChecklistItemTile extends StatelessWidget {
   final ChecklistItem item;
   final VoidCallback onToggle;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const ChecklistItemTile({
     super.key,
     required this.item,
     required this.onToggle,
+    required this.onEdit,
     required this.onDelete,
   });
 
@@ -40,6 +42,10 @@ class ChecklistItemTile extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                IconButton(
+                  icon: Icon(Icons.edit_outlined, color: colorScheme.outline),
+                  onPressed: onEdit,
+                ),
                 IconButton(
                   icon: Icon(Icons.delete_outline, color: colorScheme.error),
                   onPressed: onDelete,

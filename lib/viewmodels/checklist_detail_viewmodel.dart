@@ -31,10 +31,48 @@ class ChecklistDetailViewModel extends ChangeNotifier {
   List<ChecklistItem> get checkedItems =>
       sortedItems.where((i) => i.isChecked).toList();
 
+  void clearError() {
+    if (_errorMessage == null) return;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> loadChecklist(String id) async {
     _errorMessage = null;
     try {
       _checklist = await _repository.getChecklistById(id);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> renameChecklist(String newName) async {
+    if (_checklist == null) return;
+    _errorMessage = null;
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty || trimmed == _checklist!.name) return;
+    try {
+      _checklist!.name = trimmed;
+      await _repository.saveChecklist(_checklist!);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> editItem(String itemId, String newTitle) async {
+    if (_checklist == null) return;
+    _errorMessage = null;
+    final trimmed = newTitle.trim();
+    if (trimmed.isEmpty) return;
+    try {
+      final item = _checklist!.items.firstWhere((i) => i.id == itemId);
+      if (item.title == trimmed) return;
+      item.title = trimmed;
+      await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();

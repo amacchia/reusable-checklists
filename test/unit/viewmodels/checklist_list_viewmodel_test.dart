@@ -131,5 +131,30 @@ void main() {
         expect(viewModel.errorMessage, contains('Save failed'));
       });
     });
+
+    group('clearError', () {
+      test('clears errorMessage and notifies', () async {
+        when(() => mockRepository.getAllChecklists())
+            .thenThrow(Exception('Load failed'));
+
+        await viewModel.loadChecklists();
+        expect(viewModel.errorMessage, isNotNull);
+
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+        viewModel.clearError();
+
+        expect(viewModel.errorMessage, isNull);
+        expect(notified, 1);
+      });
+
+      test('is a no-op when errorMessage is already null', () {
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+        viewModel.clearError();
+
+        expect(notified, 0);
+      });
+    });
   });
 }

@@ -2,12 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../data/models/checklist_item.dart';
 import '../../viewmodels/checklist_detail_viewmodel.dart';
 import '../widgets/checklist_item_tile.dart';
 import '../widgets/empty_state_widget.dart';
+import '../widgets/text_input_dialog.dart';
 
-class ChecklistDetailScreen extends StatelessWidget {
+class ChecklistDetailScreen extends StatefulWidget {
   const ChecklistDetailScreen({super.key});
+
+  @override
+  State<ChecklistDetailScreen> createState() => _ChecklistDetailScreenState();
+}
+
+class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
+  ChecklistDetailViewModel? _vm;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final vm = context.read<ChecklistDetailViewModel>();
+    if (vm != _vm) {
+      _vm?.removeListener(_onVmChanged);
+      _vm = vm;
+      _vm!.addListener(_onVmChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    _vm?.removeListener(_onVmChanged);
+    super.dispose();
+  }
+
+  void _onVmChanged() {
+    final vm = _vm;
+    if (vm == null || !mounted) return;
+    final error = vm.errorMessage;
+    if (error == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+      vm.clearError();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,15 +65,30 @@ class _ChecklistAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ChecklistDetailViewModel, ({String name, bool isEmpty})>(
+    return Selector<ChecklistDetailViewModel,
+        ({String name, bool isEmpty, bool hasChecklist})>(
       selector: (_, vm) => (
         name: vm.checklist?.name ?? '',
         isEmpty: vm.sortedItems.isEmpty,
+        hasChecklist: vm.checklist != null,
       ),
       builder: (context, data, _) {
         final vm = context.read<ChecklistDetailViewModel>();
         return AppBar(
-          title: Text(data.name),
+          title: InkWell(
+            onTap: data.hasChecklist
+                ? () => _showRenameDialog(context, vm, data.name)
+                : null,
+            borderRadius: BorderRadius.circular(4),
+            child: Tooltip(
+              message: AppStrings.renameChecklist,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
+                child: Text(data.name),
+              ),
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: data.isEmpty ? null : vm.checkAll,
@@ -48,6 +102,26 @@ class _ChecklistAppBar extends StatelessWidget implements PreferredSizeWidget {
         );
       },
     );
+  }
+
+  Future<void> _showRenameDialog(
+    BuildContext context,
+    ChecklistDetailViewModel vm,
+    String currentName,
+  ) async {
+    final newName = await showAdaptiveDialog<String>(
+      context: context,
+      builder: (_) => TextInputDialog(
+        title: AppStrings.renameChecklist,
+        hint: AppStrings.checklistName,
+        submitLabel: AppStrings.save,
+        initialValue: currentName,
+        textCapitalization: TextCapitalization.words,
+      ),
+    );
+    if (newName != null) {
+      vm.renameChecklist(newName);
+    }
   }
 }
 
@@ -98,6 +172,7 @@ class _ItemLists extends StatelessWidget {
               key: ValueKey(item.id),
               item: item,
               onToggle: () => vm.toggleItem(item.id),
+              onEdit: () => _editItem(context, vm, item),
               onDelete: () => _deleteItem(context, vm, item.id),
             );
           },
@@ -124,6 +199,7 @@ class _ItemLists extends StatelessWidget {
                   key: ValueKey(item.id),
                   item: item,
                   onToggle: () => vm.toggleItem(item.id),
+                  onEdit: () => _editItem(context, vm, item),
                   onDelete: () => _deleteItem(context, vm, item.id),
                 );
               },
@@ -142,6 +218,25 @@ class _ItemLists extends StatelessWidget {
     messenger.showSnackBar(
       const SnackBar(content: Text(AppStrings.itemDeleted)),
     );
+  }
+
+  Future<void> _editItem(
+    BuildContext context,
+    ChecklistDetailViewModel vm,
+    ChecklistItem item,
+  ) async {
+    final newTitle = await showAdaptiveDialog<String>(
+      context: context,
+      builder: (_) => TextInputDialog(
+        title: AppStrings.editItem,
+        hint: AppStrings.itemText,
+        submitLabel: AppStrings.save,
+        initialValue: item.title,
+      ),
+    );
+    if (newTitle != null) {
+      vm.editItem(item.id, newTitle);
+    }
   }
 }
 

@@ -18,6 +18,7 @@ class ChecklistListScreen extends StatefulWidget {
 class _ChecklistListScreenState extends State<ChecklistListScreen>
     with RouteAware {
   final Set<String> _selectedIds = {};
+  ChecklistListViewModel? _vm;
 
   bool get _isSelectionMode => _selectedIds.isNotEmpty;
 
@@ -28,12 +29,32 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
     if (route != null) {
       routeObserver.subscribe(this, route);
     }
+    final vm = context.read<ChecklistListViewModel>();
+    if (vm != _vm) {
+      _vm?.removeListener(_onVmChanged);
+      _vm = vm;
+      _vm!.addListener(_onVmChanged);
+    }
   }
 
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
+    _vm?.removeListener(_onVmChanged);
     super.dispose();
+  }
+
+  void _onVmChanged() {
+    final vm = _vm;
+    if (vm == null || !mounted) return;
+    final error = vm.errorMessage;
+    if (error == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+      vm.clearError();
+    });
   }
 
   @override

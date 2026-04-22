@@ -1,8 +1,12 @@
 class AppStrings {
   static const appTitle = 'My Checklists';
   static const newChecklist = 'New Checklist';
+  static const renameChecklist = 'Rename Checklist';
+  static const editItem = 'Edit Item';
+  static const itemText = 'Item';
   static const checklistName = 'Checklist name';
   static const create = 'Create';
+  static const save = 'Save';
   static const cancel = 'Cancel';
   static const delete = 'Delete';
   static const checkAll = 'Check All';

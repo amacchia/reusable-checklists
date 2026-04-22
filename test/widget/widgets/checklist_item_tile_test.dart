@@ -6,7 +6,9 @@ import 'package:reusable_checklists/views/widgets/checklist_item_tile.dart';
 void main() {
   group('ChecklistItemTile', () {
     Widget buildTile(ChecklistItem item,
-        {VoidCallback? onToggle, VoidCallback? onDelete}) {
+        {VoidCallback? onToggle,
+        VoidCallback? onEdit,
+        VoidCallback? onDelete}) {
       return MaterialApp(
         home: Scaffold(
           body: ReorderableListView(
@@ -16,6 +18,7 @@ void main() {
                 key: ValueKey(item.id),
                 item: item,
                 onToggle: onToggle ?? () {},
+                onEdit: onEdit ?? () {},
                 onDelete: onDelete ?? () {},
               ),
             ],
@@ -73,6 +76,15 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.delete_outline));
       expect(deleted, true);
+    });
+
+    testWidgets('calls onEdit when edit icon tapped', (tester) async {
+      var edited = false;
+      final item = ChecklistItem(id: '1', title: 'Test', sortIndex: 0);
+      await tester.pumpWidget(buildTile(item, onEdit: () => edited = true));
+
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      expect(edited, true);
     });
   });
 }

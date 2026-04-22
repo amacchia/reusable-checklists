@@ -335,6 +335,149 @@ void main() {
       });
     });
 
+    group('renameChecklist', () {
+      test('updates checklist name and persists', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.renameChecklist('  Renamed  ');
+
+        expect(viewModel.checklist!.name, 'Renamed');
+        verify(() => mockRepository.saveChecklist(any())).called(1);
+      });
+
+      test('does nothing when name is empty', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        await viewModel.renameChecklist('   ');
+
+        expect(viewModel.checklist!.name, 'Test');
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('does nothing when name is unchanged', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        await viewModel.renameChecklist('Test');
+
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('does nothing when checklist is null', () async {
+        await viewModel.renameChecklist('Anything');
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('sets errorMessage on failure', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenThrow(Exception('Rename failed'));
+
+        await viewModel.loadChecklist('1');
+        await viewModel.renameChecklist('New Name');
+
+        expect(viewModel.errorMessage, contains('Rename failed'));
+      });
+    });
+
+    group('editItem', () {
+      test('updates item title and persists', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        await viewModel.editItem('a', '  Updated  ');
+
+        final item =
+            viewModel.checklist!.items.firstWhere((i) => i.id == 'a');
+        expect(item.title, 'Updated');
+        verify(() => mockRepository.saveChecklist(any())).called(1);
+      });
+
+      test('does nothing when title is empty', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        await viewModel.editItem('a', '   ');
+
+        final item =
+            viewModel.checklist!.items.firstWhere((i) => i.id == 'a');
+        expect(item.title, 'Item A');
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('does nothing when title is unchanged', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        await viewModel.editItem('a', 'Item A');
+
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('does nothing when checklist is null', () async {
+        await viewModel.editItem('a', 'New');
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('sets errorMessage on failure', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenThrow(Exception('Edit failed'));
+
+        await viewModel.loadChecklist('1');
+        await viewModel.editItem('a', 'New Title');
+
+        expect(viewModel.errorMessage, contains('Edit failed'));
+      });
+    });
+
+    group('clearError', () {
+      test('clears errorMessage and notifies', () async {
+        when(() => mockRepository.getChecklistById('1'))
+            .thenThrow(Exception('Load failed'));
+
+        await viewModel.loadChecklist('1');
+        expect(viewModel.errorMessage, isNotNull);
+
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+        viewModel.clearError();
+
+        expect(viewModel.errorMessage, isNull);
+        expect(notified, 1);
+      });
+
+      test('is a no-op when errorMessage is already null', () {
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+        viewModel.clearError();
+
+        expect(notified, 0);
+      });
+    });
+
     group('reorderItems', () {
       test('moves unchecked item from index 0 to index 2', () async {
         final checklist = makeChecklist();

@@ -8,6 +8,8 @@ import 'package:reusable_checklists/data/models/checklist.dart';
 import 'package:reusable_checklists/data/models/checklist_item.dart';
 import 'package:reusable_checklists/viewmodels/checklist_detail_viewmodel.dart';
 import 'package:reusable_checklists/views/screens/checklist_detail_screen.dart';
+import 'package:reusable_checklists/views/widgets/checklist_item_tile.dart';
+import 'package:reusable_checklists/views/widgets/text_input_dialog.dart';
 
 class MockChecklistDetailViewModel extends Mock
     implements ChecklistDetailViewModel {}
@@ -335,6 +337,71 @@ void main() {
     testWidgets('non-const ChecklistDetailScreen constructor', (tester) async {
       final screen = ChecklistDetailScreen(key: UniqueKey());
       expect(screen, isA<ChecklistDetailScreen>());
+    });
+
+    testWidgets('rename button opens dialog with current name and saves',
+        (tester) async {
+      when(() => mockVm.checklist).thenReturn(
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      );
+      stubItems(mockVm);
+      when(() => mockVm.renameChecklist(any())).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp(mockVm));
+      await tester.tap(find.text('Groceries'));
+      await tester.pumpAndSettle();
+
+      final dialogField = find.descendant(
+        of: find.byType(TextInputDialog),
+        matching: find.byType(TextField),
+      );
+      expect(find.text(AppStrings.renameChecklist), findsWidgets);
+      expect(tester.widget<TextField>(dialogField).controller?.text,
+          'Groceries');
+
+      await tester.enterText(dialogField, 'Weekly Shop');
+      await tester.tap(find.text(AppStrings.save));
+      await tester.pumpAndSettle();
+
+      verify(() => mockVm.renameChecklist('Weekly Shop')).called(1);
+    });
+
+    testWidgets('item edit icon opens dialog and saves new title',
+        (tester) async {
+      final items = [
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+      ];
+      when(() => mockVm.checklist).thenReturn(
+        Checklist(
+          id: '1',
+          name: 'Test',
+          createdAt: DateTime(2024),
+          items: items,
+        ),
+      );
+      stubItems(mockVm, unchecked: items);
+      when(() => mockVm.editItem(any(), any())).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp(mockVm));
+      final tileEditIcon = find.descendant(
+        of: find.byType(ChecklistItemTile),
+        matching: find.byIcon(Icons.edit_outlined),
+      );
+      await tester.tap(tileEditIcon);
+      await tester.pumpAndSettle();
+
+      final dialogField = find.descendant(
+        of: find.byType(TextInputDialog),
+        matching: find.byType(TextField),
+      );
+      expect(find.text(AppStrings.editItem), findsWidgets);
+      expect(tester.widget<TextField>(dialogField).controller?.text, 'Milk');
+
+      await tester.enterText(dialogField, 'Oat milk');
+      await tester.tap(find.text(AppStrings.save));
+      await tester.pumpAndSettle();
+
+      verify(() => mockVm.editItem('a', 'Oat milk')).called(1);
     });
 
     testWidgets('delete item shows snackbar', (tester) async {
