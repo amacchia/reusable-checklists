@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/constants/app_theme.dart';
+import 'core/navigation/route_observer.dart';
 import 'data/models/checklist.dart';
 import 'data/repositories/checklist_repository.dart';
 import 'data/repositories/hive_checklist_repository.dart';
@@ -16,9 +17,6 @@ import 'viewmodels/theme_viewmodel.dart';
 import 'views/screens/checklist_detail_screen.dart';
 import 'views/screens/checklist_list_screen.dart';
 import 'views/screens/settings_screen.dart';
-
-final RouteObserver<ModalRoute<void>> routeObserver =
-    RouteObserver<ModalRoute<void>>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,20 +43,16 @@ class MainApp extends StatelessWidget {
           create: (_) =>
               HiveChecklistRepository(Hive.box<Checklist>('checklists')),
         ),
-        ChangeNotifierProxyProvider<ChecklistRepository,
-            ChecklistListViewModel>(
+        ChangeNotifierProvider<ChecklistListViewModel>(
           create: (ctx) =>
               ChecklistListViewModel(ctx.read<ChecklistRepository>())
                 ..loadChecklists(),
-          update: (_, repo, vm) => vm!,
         ),
         Provider<SettingsRepository>(
           create: (_) => SharedPrefsSettingsRepository(prefs),
         ),
-        ChangeNotifierProxyProvider<SettingsRepository, ThemeViewModel>(
-          create: (ctx) =>
-              ThemeViewModel(ctx.read<SettingsRepository>()),
-          update: (_, repo, vm) => vm!,
+        ChangeNotifierProvider<ThemeViewModel>(
+          create: (ctx) => ThemeViewModel(ctx.read<SettingsRepository>()),
         ),
       ],
       child: Consumer<ThemeViewModel>(

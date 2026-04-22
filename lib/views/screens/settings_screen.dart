@@ -60,11 +60,18 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.code),
             title: const Text(AppStrings.sourceCode),
-            onTap: () {
-              launchUrl(
-                Uri.parse(AppStrings.sourceCodeUrl),
+            onTap: () async {
+              final uri = Uri.parse(AppStrings.sourceCodeUrl);
+              final messenger = ScaffoldMessenger.of(context);
+              final launched = await launchUrl(
+                uri,
                 mode: LaunchMode.externalApplication,
               );
+              if (!launched) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text('Could not open $uri')),
+                );
+              }
             },
           ),
         ],

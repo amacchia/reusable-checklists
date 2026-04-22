@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_strings.dart';
-import '../../main.dart';
+import '../../core/navigation/route_observer.dart';
 import '../../viewmodels/checklist_list_viewmodel.dart';
 import '../widgets/checklist_tile.dart';
 import '../widgets/empty_state_widget.dart';
