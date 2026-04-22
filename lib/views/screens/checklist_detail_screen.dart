@@ -6,105 +6,86 @@ import '../../viewmodels/checklist_detail_viewmodel.dart';
 import '../widgets/checklist_item_tile.dart';
 import '../widgets/empty_state_widget.dart';
 
-class ChecklistDetailScreen extends StatefulWidget {
+class ChecklistDetailScreen extends StatelessWidget {
   const ChecklistDetailScreen({super.key});
 
   @override
-  State<ChecklistDetailScreen> createState() => _ChecklistDetailScreenState();
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      appBar: _ChecklistAppBar(),
+      body: _ChecklistBody(),
+    );
+  }
 }
 
-class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
-  final _itemController = TextEditingController();
+class _ChecklistAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _ChecklistAppBar();
 
   @override
-  void dispose() {
-    _itemController.dispose();
-    super.dispose();
-  }
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ChecklistDetailViewModel>(
-      builder: (context, vm, _) {
-        final checklist = vm.checklist;
-        final items = vm.sortedItems;
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(checklist?.name ?? ''),
-            actions: [
-              TextButton(
-                onPressed: items.isEmpty ? null : () => vm.checkAll(),
-                child: const Text(AppStrings.checkAll),
-              ),
-              TextButton(
-                onPressed: items.isEmpty ? null : () => vm.uncheckAll(),
-                child: const Text(AppStrings.uncheckAll),
-              ),
-            ],
-          ),
-          body: checklist == null
-              ? const Center(child: CircularProgressIndicator.adaptive())
-              : Column(
-                  children: [
-                    Expanded(
-                      child: items.isEmpty
-                          ? const EmptyStateWidget(
-                              title: AppStrings.emptyItems,
-                              subtitle: AppStrings.emptyItemsSubtitle,
-                              icon: Icons.playlist_add,
-                            )
-                          : _buildItemLists(context, vm),
-                    ),
-                    _buildAddItemBar(context, vm),
-                  ],
-                ),
+    return Selector<ChecklistDetailViewModel, ({String name, bool isEmpty})>(
+      selector: (_, vm) => (
+        name: vm.checklist?.name ?? '',
+        isEmpty: vm.sortedItems.isEmpty,
+      ),
+      builder: (context, data, _) {
+        final vm = context.read<ChecklistDetailViewModel>();
+        return AppBar(
+          title: Text(data.name),
+          actions: [
+            TextButton(
+              onPressed: data.isEmpty ? null : vm.checkAll,
+              child: const Text(AppStrings.checkAll),
+            ),
+            TextButton(
+              onPressed: data.isEmpty ? null : vm.uncheckAll,
+              child: const Text(AppStrings.uncheckAll),
+            ),
+          ],
         );
       },
     );
   }
+}
 
-  Widget _buildAddItemBar(
-      BuildContext context, ChecklistDetailViewModel vm) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        border: Border(
-          top: BorderSide(color: colorScheme.outlineVariant),
+class _ChecklistBody extends StatelessWidget {
+  const _ChecklistBody();
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<ChecklistDetailViewModel>();
+    if (vm.checklist == null) {
+      return const Center(child: CircularProgressIndicator.adaptive());
+    }
+    return Column(
+      children: [
+        Expanded(
+          child: vm.sortedItems.isEmpty
+              ? const EmptyStateWidget(
+                  title: AppStrings.emptyItems,
+                  subtitle: AppStrings.emptyItemsSubtitle,
+                  icon: Icons.playlist_add,
+                )
+              : const _ItemLists(),
         ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _itemController,
-                decoration: const InputDecoration(
-                  hintText: AppStrings.addItem,
-                  border: InputBorder.none,
-                ),
-                textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (_) => _addItem(vm),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => _addItem(vm),
-            ),
-          ],
-        ),
-      ),
+        const _AddItemBar(),
+      ],
     );
   }
+}
 
-  Widget _buildItemLists(
-      BuildContext context, ChecklistDetailViewModel vm) {
+class _ItemLists extends StatelessWidget {
+  const _ItemLists();
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<ChecklistDetailViewModel>();
+    final colorScheme = Theme.of(context).colorScheme;
     final unchecked = vm.uncheckedItems;
     final checked = vm.checkedItems;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return CustomScrollView(
       slivers: [
@@ -126,7 +107,7 @@ class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
               child: Text(
-                'Completed',
+                AppStrings.completed,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -154,19 +135,72 @@ class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
     );
   }
 
-  void _addItem(ChecklistDetailViewModel vm) {
-    final text = _itemController.text.trim();
-    if (text.isNotEmpty) {
-      vm.addItem(text);
-      _itemController.clear();
-    }
-  }
-
   void _deleteItem(
       BuildContext context, ChecklistDetailViewModel vm, String itemId) {
+    final messenger = ScaffoldMessenger.of(context);
     vm.removeItem(itemId);
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       const SnackBar(content: Text(AppStrings.itemDeleted)),
+    );
+  }
+}
+
+class _AddItemBar extends StatefulWidget {
+  const _AddItemBar();
+
+  @override
+  State<_AddItemBar> createState() => _AddItemBarState();
+}
+
+class _AddItemBarState extends State<_AddItemBar> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _addItem() {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+    context.read<ChecklistDetailViewModel>().addItem(text);
+    _controller.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        border: Border(
+          top: BorderSide(color: colorScheme.outlineVariant),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                decoration: const InputDecoration(
+                  hintText: AppStrings.addItem,
+                  border: InputBorder.none,
+                ),
+                textCapitalization: TextCapitalization.sentences,
+                onSubmitted: (_) => _addItem(),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: _addItem,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

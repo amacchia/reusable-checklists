@@ -16,6 +16,7 @@ class AppStrings {
   static const checklistsDeleted = '{count} checklists deleted';
   static const nSelected = '{count} selected';
   static const itemDeleted = 'Item deleted';
+  static const completed = 'Completed';
   static const undo = 'Undo';
   static const checkedCount = '{checked} / {total}';
   static const settings = 'Settings';
