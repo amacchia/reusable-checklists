@@ -27,6 +27,12 @@ Widget buildApp(ChecklistDetailViewModel vm) {
 void main() {
   late MockChecklistDetailViewModel mockVm;
 
+  setUpAll(() {
+    registerFallbackValue(
+      ChecklistItem(id: 'fallback', title: 'fallback', sortIndex: 0),
+    );
+  });
+
   setUp(() {
     mockVm = MockChecklistDetailViewModel();
     when(() => mockVm.errorMessage).thenReturn(null);
@@ -424,6 +430,32 @@ void main() {
       await tester.pump();
 
       expect(find.text(AppStrings.itemDeleted), findsOneWidget);
+    });
+
+    testWidgets('undo after delete item calls vm.restoreItem', (tester) async {
+      final item = ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0);
+      when(() => mockVm.checklist).thenReturn(
+        Checklist(
+          id: '1',
+          name: 'Test',
+          createdAt: DateTime(2024),
+          items: [item],
+        ),
+      );
+      stubItems(mockVm, unchecked: [item]);
+      when(() => mockVm.removeItem('a')).thenAnswer((_) async {});
+      when(() => mockVm.restoreItem(any())).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp(mockVm));
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(SnackBarAction, AppStrings.undo));
+      await tester.pumpAndSettle();
+
+      verify(() => mockVm.restoreItem(any(that: predicate<ChecklistItem>(
+              (i) => i.id == 'a' && i.title == 'Milk'))))
+          .called(1);
     });
   });
 }

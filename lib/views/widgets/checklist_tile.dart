@@ -9,6 +9,7 @@ class ChecklistTile extends StatelessWidget {
   final bool isSelectionMode;
   final bool isSelected;
   final VoidCallback? onSelectionTap;
+  final int? reorderIndex;
 
   const ChecklistTile({
     super.key,
@@ -18,6 +19,7 @@ class ChecklistTile extends StatelessWidget {
     this.isSelectionMode = false,
     this.isSelected = false,
     this.onSelectionTap,
+    this.reorderIndex,
   });
 
   @override
@@ -25,6 +27,7 @@ class ChecklistTile extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final total = checklist.items.length;
     final checked = checklist.checkedCount;
+    final showDragHandle = reorderIndex != null && !isSelectionMode;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -41,6 +44,12 @@ class ChecklistTile extends StatelessWidget {
             ? Text(
                 '$checked / $total checked',
                 style: TextStyle(color: colorScheme.outline),
+              )
+            : null,
+        trailing: showDragHandle
+            ? ReorderableDragStartListener(
+                index: reorderIndex!,
+                child: Icon(Icons.drag_handle, color: colorScheme.outline),
               )
             : null,
         onTap: isSelectionMode ? onSelectionTap : onTap,

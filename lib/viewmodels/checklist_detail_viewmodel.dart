@@ -112,6 +112,26 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> restoreItem(ChecklistItem item) async {
+    if (_checklist == null) return;
+    if (_checklist!.items.any((i) => i.id == item.id)) return;
+    _errorMessage = null;
+    try {
+      final sorted = sortedItems;
+      final insertIdx = item.sortIndex.clamp(0, sorted.length);
+      sorted.insert(insertIdx, item);
+      for (var i = 0; i < sorted.length; i++) {
+        sorted[i].sortIndex = i;
+      }
+      _checklist!.items = sorted;
+      await _repository.saveChecklist(_checklist!);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
   Future<void> toggleItem(String itemId) async {
     if (_checklist == null) return;
     _errorMessage = null;
