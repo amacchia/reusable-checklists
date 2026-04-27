@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../viewmodels/checklist_list_viewmodel.dart';
 import '../../viewmodels/theme_viewmodel.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -57,6 +59,24 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const Divider(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(
+              AppStrings.data,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.upload_outlined),
+            title: const Text(AppStrings.exportJson),
+            onTap: () => _export(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.download_outlined),
+            title: const Text(AppStrings.importJson),
+            onTap: () => _import(context),
+          ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.code),
             title: const Text(AppStrings.sourceCode),
@@ -77,5 +97,51 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _export(BuildContext context) async {
+    final vm = context.read<ChecklistListViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
+    if (vm.checklists.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text(AppStrings.nothingToExport)),
+      );
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: vm.exportAsJson()));
+    messenger.showSnackBar(
+      const SnackBar(content: Text(AppStrings.exportCopied)),
+    );
+  }
+
+  Future<void> _import(BuildContext context) async {
+    final vm = context.read<ChecklistListViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
+    final clip = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = clip?.text?.trim();
+    if (text == null || text.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text(AppStrings.clipboardEmpty)),
+      );
+      return;
+    }
+    try {
+      final count = await vm.importFromJson(text);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            AppStrings.importSucceeded.replaceFirst('{count}', '$count'),
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            AppStrings.importFailed.replaceFirst('{reason}', e.toString()),
+          ),
+        ),
+      );
+    }
   }
 }

@@ -30,4 +30,12 @@ class AppStrings {
   static const themeDark = 'Dark';
   static const sourceCode = 'Source Code';
   static const sourceCodeUrl = 'https://github.com/amacchia/reusable-checklists';
+  static const data = 'Data';
+  static const exportJson = 'Export to clipboard';
+  static const importJson = 'Import from clipboard';
+  static const exportCopied = 'Checklists copied to clipboard';
+  static const nothingToExport = 'No checklists to export';
+  static const clipboardEmpty = 'Clipboard is empty';
+  static const importSucceeded = '{count} checklist(s) imported';
+  static const importFailed = 'Import failed: {reason}';
 }

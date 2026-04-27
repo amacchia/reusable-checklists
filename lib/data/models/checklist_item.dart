@@ -35,4 +35,18 @@ class ChecklistItem {
       sortIndex: sortIndex ?? this.sortIndex,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'isChecked': isChecked,
+        'sortIndex': sortIndex,
+      };
+
+  factory ChecklistItem.fromJson(Map<String, dynamic> json) => ChecklistItem(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        isChecked: json['isChecked'] as bool? ?? false,
+        sortIndex: (json['sortIndex'] as num).toInt(),
+      );
 }

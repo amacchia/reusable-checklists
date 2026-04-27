@@ -176,13 +176,17 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
         icon: Icons.checklist_outlined,
       );
     }
-    return ListView.builder(
+    return ReorderableListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: vm.checklists.length,
+      buildDefaultDragHandles: false,
+      onReorder: vm.reorderChecklists,
       itemBuilder: (context, index) {
         final checklist = vm.checklists[index];
         return ChecklistTile(
+          key: ValueKey(checklist.id),
           checklist: checklist,
+          reorderIndex: index,
           isSelectionMode: _isSelectionMode,
           isSelected: _selectedIds.contains(checklist.id),
           onTap: () {

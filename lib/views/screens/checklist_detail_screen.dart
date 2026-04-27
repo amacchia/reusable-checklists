@@ -214,9 +214,17 @@ class _ItemLists extends StatelessWidget {
   void _deleteItem(
       BuildContext context, ChecklistDetailViewModel vm, String itemId) {
     final messenger = ScaffoldMessenger.of(context);
+    final item = vm.checklist?.items.firstWhere((i) => i.id == itemId);
+    if (item == null) return;
     vm.removeItem(itemId);
     messenger.showSnackBar(
-      const SnackBar(content: Text(AppStrings.itemDeleted)),
+      SnackBar(
+        content: const Text(AppStrings.itemDeleted),
+        action: SnackBarAction(
+          label: AppStrings.undo,
+          onPressed: () => vm.restoreItem(item),
+        ),
+      ),
     );
   }
 
