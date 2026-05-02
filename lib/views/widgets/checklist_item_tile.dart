@@ -7,6 +7,7 @@ class ChecklistItemTile extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final int? reorderIndex;
 
   const ChecklistItemTile({
     super.key,
@@ -14,6 +15,7 @@ class ChecklistItemTile extends StatelessWidget {
     required this.onToggle,
     required this.onEdit,
     required this.onDelete,
+    this.reorderIndex,
   });
 
   @override
@@ -50,10 +52,15 @@ class ChecklistItemTile extends StatelessWidget {
                   icon: Icon(Icons.delete_outline, color: colorScheme.error),
                   onPressed: onDelete,
                 ),
-                ReorderableDragStartListener(
-                  index: item.sortIndex,
-                  child: Icon(Icons.drag_handle, color: colorScheme.outline),
-                ),
+                if (reorderIndex != null)
+                  ReorderableDragStartListener(
+                    index: reorderIndex!,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child:
+                          Icon(Icons.drag_handle, color: colorScheme.outline),
+                    ),
+                  ),
               ],
             ),
           ),

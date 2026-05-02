@@ -581,7 +581,7 @@ void main() {
         expect(sorted.map((i) => i.title).toList(), ['Item C', 'Item A', 'Item B']);
       });
 
-      test('reorder only affects unchecked items, checked stay at end',
+      test('reorder only affects unchecked items, checked keep their slot',
           () async {
         final checklist = makeChecklist(items: [
           ChecklistItem(id: 'a', title: 'A', sortIndex: 0),
@@ -602,6 +602,36 @@ void main() {
             ['C', 'A']);
         expect(
             viewModel.checkedItems.map((i) => i.title).toList(), ['B']);
+        // B keeps its middle slot (sortIndex 1), so unchecking it later
+        // restores it between C and A.
+        final byId = {for (final i in viewModel.sortedItems) i.id: i};
+        expect(byId['b']!.sortIndex, 1);
+      });
+
+      test('checked item returns to its prior slot when unchecked',
+          () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(id: 'a', title: 'A', sortIndex: 0),
+          ChecklistItem(id: 'b', title: 'B', sortIndex: 1),
+          ChecklistItem(id: 'c', title: 'C', sortIndex: 2),
+          ChecklistItem(id: 'd', title: 'D', sortIndex: 3),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        // Check B (slot 1).
+        await viewModel.toggleItem('b');
+        // Reorder unchecked [A, C, D] -> [D, A, C]. B's slot should be preserved.
+        await viewModel.reorderItems(2, 0);
+        expect(viewModel.uncheckedItems.map((i) => i.title).toList(),
+            ['D', 'A', 'C']);
+        // Uncheck B; it returns to its remembered slot.
+        await viewModel.toggleItem('b');
+        expect(viewModel.uncheckedItems.map((i) => i.title).toList(),
+            ['D', 'B', 'A', 'C']);
       });
 
       test('does nothing when checklist is null', () async {

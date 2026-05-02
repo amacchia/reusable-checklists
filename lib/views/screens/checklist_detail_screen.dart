@@ -171,6 +171,7 @@ class _ItemLists extends StatelessWidget {
             return ChecklistItemTile(
               key: ValueKey(item.id),
               item: item,
+              reorderIndex: index,
               onToggle: () => vm.toggleItem(item.id),
               onEdit: () => _editItem(context, vm, item),
               onDelete: () => _deleteItem(context, vm, item.id),

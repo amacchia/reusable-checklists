@@ -180,16 +180,19 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     if (_checklist == null) return;
     _errorMessage = null;
     try {
-      final unchecked = uncheckedItems;
-      final checked = checkedItems;
+      final master = sortedItems;
+      final unchecked = master.where((i) => !i.isChecked).toList();
       if (newIndex > oldIndex) newIndex--;
       final movedItem = unchecked.removeAt(oldIndex);
       unchecked.insert(newIndex, movedItem);
-      final combined = [...unchecked, ...checked];
-      for (var i = 0; i < combined.length; i++) {
-        combined[i].sortIndex = i;
+      var k = 0;
+      final rebuilt = master
+          .map((item) => item.isChecked ? item : unchecked[k++])
+          .toList();
+      for (var i = 0; i < rebuilt.length; i++) {
+        rebuilt[i].sortIndex = i;
       }
-      _checklist!.items = combined;
+      _checklist!.items = rebuilt;
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {

@@ -28,10 +28,10 @@ jobs:
       - name: Verify 95% test coverage
         run: |
           sudo apt-get install -y lcov > /dev/null 2>&1
-          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep 'lines' | grep -oP '[\d.]+%')
-          echo "Line coverage: $COVERAGE"
-          if [ "$COVERAGE" != "95.0%" ]; then
-            echo "::error::Test coverage is $COVERAGE, expected 95.0%"
+          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep 'lines' | grep -oP '[\d.]+(?=%)')
+          echo "Line coverage: $COVERAGE%"
+          if awk "BEGIN {exit !($COVERAGE < 95.0)}"; then
+            echo "::error::Test coverage is $COVERAGE%, expected at least 95.0%"
             lcov --list coverage/lcov.info
             exit 1
           fi
