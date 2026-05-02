@@ -4,7 +4,6 @@ class AppTheme {
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: Colors.blueGrey,
-      brightness: Brightness.light,
     );
 
     return ThemeData(

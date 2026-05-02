@@ -12,9 +12,34 @@ linter:
     - prefer_const_constructors_in_immutables
     - prefer_const_declarations
     - prefer_const_literals_to_create_immutables
+    - prefer_final_fields
     - prefer_final_locals
+    - prefer_single_quotes
     - unawaited_futures
     - avoid_print
+    - avoid_redundant_argument_values
+    - avoid_void_async
+    - cancel_subscriptions
+    - close_sinks
+    - directives_ordering
+    - discarded_futures
     - require_trailing_commas
     - sort_child_properties_last
+    - sort_pub_dependencies
+    - unnecessary_lambdas
+    - unnecessary_null_checks
+    - unnecessary_overrides
+    - unnecessary_parenthesis
+    - use_build_context_synchronously
     - use_super_parameters
+    - no_adjacent_strings_in_list
+    - avoid_dynamic_calls
+    - await_only_futures
+    - throw_in_finally
+    - test_types_in_equals
+    - unnecessary_statements
+    - unnecessary_await_in_return
+    - sized_box_for_whitespace
+    - use_colored_box
+    - use_decorated_box
+    - avoid_unnecessary_containers

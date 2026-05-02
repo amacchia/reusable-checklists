@@ -134,7 +134,6 @@ void main() {
               checklist: checklist,
               onTap: () {},
               isSelectionMode: true,
-              isSelected: false,
             ),
           ),
         ),

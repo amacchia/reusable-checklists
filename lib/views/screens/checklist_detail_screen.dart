@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -217,7 +219,7 @@ class _ItemLists extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     final item = vm.checklist?.items.firstWhere((i) => i.id == itemId);
     if (item == null) return;
-    vm.removeItem(itemId);
+    unawaited(vm.removeItem(itemId));
     messenger.showSnackBar(
       SnackBar(
         content: const Text(AppStrings.itemDeleted),
@@ -268,7 +270,7 @@ class _AddItemBarState extends State<_AddItemBar> {
   void _addItem() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
-    context.read<ChecklistDetailViewModel>().addItem(text);
+    unawaited(context.read<ChecklistDetailViewModel>().addItem(text));
     _controller.clear();
   }
 

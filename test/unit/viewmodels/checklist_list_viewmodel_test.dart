@@ -28,7 +28,7 @@ void main() {
     group('loadChecklists', () {
       test('sets isLoading then populates checklists', () async {
         final checklists = [
-          Checklist(id: '1', name: 'A', createdAt: DateTime(2024, 1)),
+          Checklist(id: '1', name: 'A', createdAt: DateTime(2024)),
           Checklist(id: '2', name: 'B', createdAt: DateTime(2024, 2)),
         ];
         when(() => mockRepository.getAllChecklists())
@@ -136,7 +136,7 @@ void main() {
     group('reorderChecklists', () {
       test('reorders and reassigns sortIndex', () async {
         final a = Checklist(
-            id: 'a', name: 'A', createdAt: DateTime(2024, 1), sortIndex: 0);
+            id: 'a', name: 'A', createdAt: DateTime(2024));
         final b = Checklist(
             id: 'b', name: 'B', createdAt: DateTime(2024, 2), sortIndex: 1);
         final c = Checklist(
@@ -174,7 +174,7 @@ void main() {
       test('sorts by sortIndex ascending, createdAt descending as tiebreaker',
           () async {
         // Legacy checklists all have sortIndex 0 - fall back to createdAt desc.
-        final a = Checklist(id: 'a', name: 'A', createdAt: DateTime(2024, 1));
+        final a = Checklist(id: 'a', name: 'A', createdAt: DateTime(2024));
         final b = Checklist(id: 'b', name: 'B', createdAt: DateTime(2024, 3));
         final c = Checklist(
             id: 'c', name: 'C', createdAt: DateTime(2024, 2), sortIndex: -1);
@@ -191,7 +191,7 @@ void main() {
     group('createChecklist ordering', () {
       test('new checklist lands at the top', () async {
         final a = Checklist(
-            id: 'a', name: 'A', createdAt: DateTime(2024), sortIndex: 0);
+            id: 'a', name: 'A', createdAt: DateTime(2024));
         when(() => mockRepository.getAllChecklists())
             .thenAnswer((_) async => [a]);
         when(() => mockRepository.saveChecklist(any()))
@@ -209,8 +209,7 @@ void main() {
         final original = Checklist(
           id: 'a',
           name: 'Original',
-          createdAt: DateTime.utc(2024, 1, 1),
-          sortIndex: 0,
+          createdAt: DateTime.utc(2024),
           items: [
             ChecklistItem(id: 'x', title: 'Milk', sortIndex: 0),
           ],

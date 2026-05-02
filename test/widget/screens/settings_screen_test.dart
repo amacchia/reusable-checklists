@@ -179,7 +179,7 @@ void main() {
         when(() => listVm.checklists).thenReturn([
           Checklist(id: '1', name: 'A', createdAt: DateTime(2024)),
         ]);
-        when(() => listVm.exportAsJson()).thenReturn('{"version":1}');
+        when(listVm.exportAsJson).thenReturn('{"version":1}');
 
         await tester.pumpWidget(buildApp(themeVm, listVm: listVm));
         await tester.tap(find.text(AppStrings.exportJson));
@@ -199,7 +199,7 @@ void main() {
         await tester.pump();
 
         expect(find.text(AppStrings.nothingToExport), findsOneWidget);
-        verifyNever(() => listVm.exportAsJson());
+        verifyNever(listVm.exportAsJson);
       });
 
       testWidgets('import reads clipboard and calls importFromJson',

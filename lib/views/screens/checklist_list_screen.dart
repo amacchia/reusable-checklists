@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -59,7 +61,7 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
 
   @override
   void didPopNext() {
-    context.read<ChecklistListViewModel>().loadChecklists();
+    unawaited(context.read<ChecklistListViewModel>().loadChecklists());
   }
 
   void _startSelection(String id) {
@@ -80,9 +82,7 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
   }
 
   void _clearSelection() {
-    setState(() {
-      _selectedIds.clear();
-    });
+    setState(_selectedIds.clear);
   }
 
   void _deleteSelected(BuildContext context, ChecklistListViewModel vm) {
@@ -92,7 +92,7 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
     final count = deletedChecklists.length;
 
     for (final checklist in deletedChecklists) {
-      vm.deleteChecklist(checklist.id);
+      unawaited(vm.deleteChecklist(checklist.id));
     }
     _clearSelection();
 
@@ -107,7 +107,7 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
           label: AppStrings.undo,
           onPressed: () {
             for (final checklist in deletedChecklists) {
-              vm.saveChecklist(checklist);
+              unawaited(vm.saveChecklist(checklist));
             }
           },
         ),
@@ -190,7 +190,9 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
           isSelectionMode: _isSelectionMode,
           isSelected: _selectedIds.contains(checklist.id),
           onTap: () {
-            Navigator.pushNamed(context, '/detail', arguments: checklist.id);
+            unawaited(
+              Navigator.pushNamed(context, '/detail', arguments: checklist.id),
+            );
           },
           onLongPress: () => _startSelection(checklist.id),
           onSelectionTap: () => _toggleSelection(checklist.id),

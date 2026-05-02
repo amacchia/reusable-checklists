@@ -12,9 +12,7 @@ void main() {
   late Box<Checklist> box;
   late HiveChecklistRepository repository;
 
-  setUpAll(() {
-    Hive.registerAdapters();
-  });
+  setUpAll(Hive.registerAdapters);
 
   setUp(() async {
     tempDir = await Directory.systemTemp.createTemp('hive_test_');

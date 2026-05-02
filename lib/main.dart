@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -44,9 +46,11 @@ class MainApp extends StatelessWidget {
               HiveChecklistRepository(Hive.box<Checklist>('checklists')),
         ),
         ChangeNotifierProvider<ChecklistListViewModel>(
-          create: (ctx) =>
-              ChecklistListViewModel(ctx.read<ChecklistRepository>())
-                ..loadChecklists(),
+          create: (ctx) {
+            final vm = ChecklistListViewModel(ctx.read<ChecklistRepository>());
+            unawaited(vm.loadChecklists());
+            return vm;
+          },
         ),
         Provider<SettingsRepository>(
           create: (_) => SharedPrefsSettingsRepository(prefs),
@@ -75,9 +79,13 @@ class MainApp extends StatelessWidget {
                   if (checklistId is! String) return null;
                   return MaterialPageRoute(
                     builder: (ctx) => ChangeNotifierProvider(
-                      create: (ctx) => ChecklistDetailViewModel(
-                        ctx.read<ChecklistRepository>(),
-                      )..loadChecklist(checklistId),
+                      create: (ctx) {
+                        final vm = ChecklistDetailViewModel(
+                          ctx.read<ChecklistRepository>(),
+                        );
+                        unawaited(vm.loadChecklist(checklistId));
+                        return vm;
+                      },
                       child: const ChecklistDetailScreen(),
                     ),
                   );

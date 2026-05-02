@@ -4,9 +4,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:provider/provider.dart';
 import 'package:reusable_checklists/core/constants/app_strings.dart';
 import 'package:reusable_checklists/core/constants/app_theme.dart';
+import 'package:reusable_checklists/core/navigation/route_observer.dart';
 import 'package:reusable_checklists/data/models/checklist.dart';
 import 'package:reusable_checklists/data/repositories/checklist_repository.dart';
-import 'package:reusable_checklists/core/navigation/route_observer.dart';
 import 'package:reusable_checklists/viewmodels/checklist_list_viewmodel.dart';
 import 'package:reusable_checklists/views/screens/checklist_list_screen.dart';
 
