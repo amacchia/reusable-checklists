@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.amacchia.ReusableChecklists</id>
+  <name>Reusable Checklists</name>
+  <summary>Create and reuse checklists offline</summary>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="io.github.amacchia">
+    <name>Anthony Macchia</name>
+  </developer>
+  <description>
+    <p>
+      Reusable Checklists is an offline-first app for creating, organizing,
+      and reusing checklists. Build a checklist once, then run through it as
+      many times as you like — your data stays on your device.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.amacchia.ReusableChecklists.desktop</launchable>
+  <url type="homepage">https://github.com/amacchia/reusable-checklists</url>
+  <url type="bugtracker">https://github.com/amacchia/reusable-checklists/issues</url>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-05-02"/>
+  </releases>
+</component>

@@ -1,0 +1,47 @@
+app-id: io.github.amacchia.ReusableChecklists
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: reusable_checklists
+
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+
+modules:
+  - name: reusable_checklists
+    buildsystem: simple
+    build-commands:
+      # Bundle (binary, libs, flutter_assets) → /app/reusable_checklists
+      - mkdir -p /app/reusable_checklists
+      - cp -r bundle/. /app/reusable_checklists/
+      # Wrapper on PATH so `command:` resolves
+      - install -Dm755 reusable_checklists.sh /app/bin/reusable_checklists
+      # Desktop entry, AppStream metainfo, icon set
+      - install -Dm644 io.github.amacchia.ReusableChecklists.desktop
+          /app/share/applications/io.github.amacchia.ReusableChecklists.desktop
+      - install -Dm644 io.github.amacchia.ReusableChecklists.metainfo.xml
+          /app/share/metainfo/io.github.amacchia.ReusableChecklists.metainfo.xml
+      - |
+        for size in 16 32 48 64 128 256 512; do
+          install -Dm644 \
+            "icons/hicolor/${size}x${size}/apps/io.github.amacchia.ReusableChecklists.png" \
+            "/app/share/icons/hicolor/${size}x${size}/apps/io.github.amacchia.ReusableChecklists.png"
+        done
+    sources:
+      - type: dir
+        path: ../../build/linux/x64/release/bundle
+        dest: bundle
+      - type: file
+        path: io.github.amacchia.ReusableChecklists.desktop
+      - type: file
+        path: io.github.amacchia.ReusableChecklists.metainfo.xml
+      - type: dir
+        path: icons
+        dest: icons
+      - type: script
+        dest-filename: reusable_checklists.sh
+        commands:
+          - exec /app/reusable_checklists/reusable_checklists "$@"

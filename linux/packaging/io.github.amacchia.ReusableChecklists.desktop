@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Reusable Checklists
+Comment=An offline-first app for creating and reusing checklists
+Exec=reusable_checklists
+Icon=io.github.amacchia.ReusableChecklists
+Terminal=false
+Categories=Office;Utility;
+Keywords=checklist;todo;tasks;list;
+StartupWMClass=io.github.amacchia.ReusableChecklists
