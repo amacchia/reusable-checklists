@@ -478,6 +478,77 @@ void main() {
       });
     });
 
+    group('restoreItem', () {
+      test('re-inserts removed item at its original sort index', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        final removed = viewModel.checklist!.items
+            .firstWhere((i) => i.id == 'b');
+        await viewModel.removeItem('b');
+        await viewModel.restoreItem(removed);
+
+        expect(viewModel.sortedItems.map((i) => i.title).toList(),
+            ['Item A', 'Item B', 'Item C']);
+      });
+
+      test('clamps insert index when sortIndex is out of range', () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(id: 'a', title: 'A', sortIndex: 0),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        final restored =
+            ChecklistItem(id: 'z', title: 'Z', sortIndex: 99);
+        await viewModel.restoreItem(restored);
+
+        expect(viewModel.sortedItems.map((i) => i.title).toList(),
+            ['A', 'Z']);
+      });
+
+      test('is a no-op if item with same id already exists', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        final duplicate =
+            ChecklistItem(id: 'a', title: 'Dup', sortIndex: 0);
+        await viewModel.restoreItem(duplicate);
+
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('does nothing when checklist is null', () async {
+        final item = ChecklistItem(id: 'a', title: 'A', sortIndex: 0);
+        await viewModel.restoreItem(item);
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('sets errorMessage on failure', () async {
+        final checklist = makeChecklist();
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenThrow(Exception('Restore failed'));
+
+        await viewModel.loadChecklist('1');
+        final restored =
+            ChecklistItem(id: 'z', title: 'Z', sortIndex: 0);
+        await viewModel.restoreItem(restored);
+
+        expect(viewModel.errorMessage, contains('Restore failed'));
+      });
+    });
+
     group('reorderItems', () {
       test('moves unchecked item from index 0 to index 2', () async {
         final checklist = makeChecklist();
@@ -510,7 +581,7 @@ void main() {
         expect(sorted.map((i) => i.title).toList(), ['Item C', 'Item A', 'Item B']);
       });
 
-      test('reorder only affects unchecked items, checked stay at end',
+      test('reorder only affects unchecked items, checked keep their slot',
           () async {
         final checklist = makeChecklist(items: [
           ChecklistItem(id: 'a', title: 'A', sortIndex: 0),
@@ -531,6 +602,36 @@ void main() {
             ['C', 'A']);
         expect(
             viewModel.checkedItems.map((i) => i.title).toList(), ['B']);
+        // B keeps its middle slot (sortIndex 1), so unchecking it later
+        // restores it between C and A.
+        final byId = {for (final i in viewModel.sortedItems) i.id: i};
+        expect(byId['b']!.sortIndex, 1);
+      });
+
+      test('checked item returns to its prior slot when unchecked',
+          () async {
+        final checklist = makeChecklist(items: [
+          ChecklistItem(id: 'a', title: 'A', sortIndex: 0),
+          ChecklistItem(id: 'b', title: 'B', sortIndex: 1),
+          ChecklistItem(id: 'c', title: 'C', sortIndex: 2),
+          ChecklistItem(id: 'd', title: 'D', sortIndex: 3),
+        ]);
+        when(() => mockRepository.getChecklistById('1'))
+            .thenAnswer((_) async => checklist);
+        when(() => mockRepository.saveChecklist(any()))
+            .thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        // Check B (slot 1).
+        await viewModel.toggleItem('b');
+        // Reorder unchecked [A, C, D] -> [D, A, C]. B's slot should be preserved.
+        await viewModel.reorderItems(2, 0);
+        expect(viewModel.uncheckedItems.map((i) => i.title).toList(),
+            ['D', 'A', 'C']);
+        // Uncheck B; it returns to its remembered slot.
+        await viewModel.toggleItem('b');
+        expect(viewModel.uncheckedItems.map((i) => i.title).toList(),
+            ['D', 'B', 'A', 'C']);
       });
 
       test('does nothing when checklist is null', () async {

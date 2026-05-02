@@ -112,6 +112,26 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> restoreItem(ChecklistItem item) async {
+    if (_checklist == null) return;
+    if (_checklist!.items.any((i) => i.id == item.id)) return;
+    _errorMessage = null;
+    try {
+      final sorted = sortedItems;
+      final insertIdx = item.sortIndex.clamp(0, sorted.length);
+      sorted.insert(insertIdx, item);
+      for (var i = 0; i < sorted.length; i++) {
+        sorted[i].sortIndex = i;
+      }
+      _checklist!.items = sorted;
+      await _repository.saveChecklist(_checklist!);
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
   Future<void> toggleItem(String itemId) async {
     if (_checklist == null) return;
     _errorMessage = null;
@@ -160,16 +180,19 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     if (_checklist == null) return;
     _errorMessage = null;
     try {
-      final unchecked = uncheckedItems;
-      final checked = checkedItems;
+      final master = sortedItems;
+      final unchecked = master.where((i) => !i.isChecked).toList();
       if (newIndex > oldIndex) newIndex--;
       final movedItem = unchecked.removeAt(oldIndex);
       unchecked.insert(newIndex, movedItem);
-      final combined = [...unchecked, ...checked];
-      for (var i = 0; i < combined.length; i++) {
-        combined[i].sortIndex = i;
+      var k = 0;
+      final rebuilt = master
+          .map((item) => item.isChecked ? item : unchecked[k++])
+          .toList();
+      for (var i = 0; i < rebuilt.length; i++) {
+        rebuilt[i].sortIndex = i;
       }
-      _checklist!.items = combined;
+      _checklist!.items = rebuilt;
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {

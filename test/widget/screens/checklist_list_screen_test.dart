@@ -414,6 +414,32 @@ void main() {
       expect(find.text(AppStrings.appTitle), findsOneWidget);
     });
 
+    testWidgets('shows a drag handle per tile', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+        Checklist(id: '2', name: 'Travel', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      expect(find.byIcon(Icons.drag_handle), findsNWidgets(2));
+    });
+
+    testWidgets('drag handle hidden during selection mode', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+      expect(find.byIcon(Icons.drag_handle), findsOneWidget);
+
+      await tester.longPress(find.text('Groceries'));
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.drag_handle), findsNothing);
+    });
+
     testWidgets('FAB is hidden during selection mode', (tester) async {
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([
