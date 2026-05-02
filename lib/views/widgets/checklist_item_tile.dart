@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_strings.dart';
 import '../../data/models/checklist_item.dart';
 
 class ChecklistItemTile extends StatelessWidget {
@@ -31,6 +32,7 @@ class ChecklistItemTile extends StatelessWidget {
             leading: Checkbox.adaptive(
               value: item.isChecked,
               onChanged: (_) => onToggle(),
+              semanticLabel: item.title,
             ),
             title: Text(
               item.title,
@@ -47,10 +49,12 @@ class ChecklistItemTile extends StatelessWidget {
                 IconButton(
                   icon: Icon(Icons.edit_outlined, color: colorScheme.outline),
                   onPressed: onEdit,
+                  tooltip: AppStrings.editItem,
                 ),
                 IconButton(
                   icon: Icon(Icons.delete_outline, color: colorScheme.error),
                   onPressed: onDelete,
+                  tooltip: AppStrings.delete,
                 ),
                 if (reorderIndex != null)
                   ReorderableDragStartListener(

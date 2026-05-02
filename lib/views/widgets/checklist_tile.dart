@@ -37,6 +37,7 @@ class ChecklistTile extends StatelessWidget {
             ? Checkbox.adaptive(
                 value: isSelected,
                 onChanged: (_) => onSelectionTap?.call(),
+                semanticLabel: checklist.name,
               )
             : null,
         title: Text(checklist.name),

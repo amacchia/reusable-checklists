@@ -1,5 +1,5 @@
 name: reusable_checklists
-description: "A new Flutter project."
+description: "An offline-first app for creating and reusing checklists."
 publish_to: 'none'
 version: 0.1.0+1
 

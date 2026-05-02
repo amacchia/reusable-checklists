@@ -47,6 +47,6 @@ class ChecklistItem {
         id: json['id'] as String,
         title: json['title'] as String,
         isChecked: json['isChecked'] as bool? ?? false,
-        sortIndex: (json['sortIndex'] as num).toInt(),
+        sortIndex: (json['sortIndex'] as num?)?.toInt() ?? 0,
       );
 }

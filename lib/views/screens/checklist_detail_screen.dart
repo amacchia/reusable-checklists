@@ -120,7 +120,7 @@ class _ChecklistAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
     if (newName != null) {
-      vm.renameChecklist(newName);
+      await vm.renameChecklist(newName);
     }
   }
 }
@@ -244,7 +244,7 @@ class _ItemLists extends StatelessWidget {
       ),
     );
     if (newTitle != null) {
-      vm.editItem(item.id, newTitle);
+      await vm.editItem(item.id, newTitle);
     }
   }
 }

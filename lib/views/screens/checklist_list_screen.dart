@@ -206,7 +206,7 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
       builder: (_) => const NewChecklistDialog(),
     );
     if (name != null) {
-      vm.createChecklist(name);
+      await vm.createChecklist(name);
     }
   }
 }

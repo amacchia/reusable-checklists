@@ -239,7 +239,7 @@ void main() {
             .thenAnswer((_) async {});
 
         await viewModel.loadChecklists();
-        final payload =
+        const payload =
             '{"version":1,"checklists":[{"id":"new","name":"Imported",'
             '"createdAt":"2024-01-01T00:00:00.000Z","sortIndex":0,'
             '"items":[]}]}';

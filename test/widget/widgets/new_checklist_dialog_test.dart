@@ -11,7 +11,7 @@ void main() {
           home: Builder(
             builder: (context) => Scaffold(
               body: ElevatedButton(
-                onPressed: () => showDialog(
+                onPressed: () => showDialog<void>(
                   context: context,
                   builder: (_) => const NewChecklistDialog(),
                 ),
@@ -38,7 +38,7 @@ void main() {
           home: Builder(
             builder: (context) => Scaffold(
               body: ElevatedButton(
-                onPressed: () => showDialog(
+                onPressed: () => showDialog<void>(
                   context: context,
                   builder: (_) => const NewChecklistDialog(),
                 ),
@@ -64,7 +64,7 @@ void main() {
           home: Builder(
             builder: (context) => Scaffold(
               body: ElevatedButton(
-                onPressed: () => showDialog(
+                onPressed: () => showDialog<void>(
                   context: context,
                   builder: (_) => const NewChecklistDialog(),
                 ),

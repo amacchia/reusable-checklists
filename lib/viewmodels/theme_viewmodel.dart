@@ -11,10 +11,10 @@ class ThemeViewModel extends ChangeNotifier {
 
   ThemeMode get themeMode => _themeMode;
 
-  void setThemeMode(ThemeMode mode) {
+  Future<void> setThemeMode(ThemeMode mode) async {
     if (_themeMode == mode) return;
     _themeMode = mode;
-    _repository.setThemeMode(mode);
     notifyListeners();
+    await _repository.setThemeMode(mode);
   }
 }

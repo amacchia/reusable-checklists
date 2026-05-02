@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +52,7 @@ class SettingsScreen extends StatelessWidget {
                       ],
                       selected: {vm.themeMode},
                       onSelectionChanged: (selected) {
-                        vm.setThemeMode(selected.first);
+                        unawaited(vm.setThemeMode(selected.first));
                       },
                     );
                   },

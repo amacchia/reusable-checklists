@@ -77,4 +77,22 @@ void main() {
       isNull,
     );
   });
+
+  testWidgets('onGenerateRoute returns null for /detail without String args',
+      (tester) async {
+    await tester.pumpWidget(app.MainApp(prefs: prefs));
+    await tester.pump();
+
+    final materialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(
+      materialApp.onGenerateRoute!(const RouteSettings(name: '/detail')),
+      isNull,
+    );
+    expect(
+      materialApp.onGenerateRoute!(
+        const RouteSettings(name: '/detail', arguments: 42),
+      ),
+      isNull,
+    );
+  });
 }

@@ -71,7 +71,8 @@ class MainApp extends StatelessWidget {
                     builder: (_) => const ChecklistListScreen(),
                   );
                 case '/detail':
-                  final checklistId = settings.arguments as String;
+                  final checklistId = settings.arguments;
+                  if (checklistId is! String) return null;
                   return MaterialPageRoute(
                     builder: (ctx) => ChangeNotifierProvider(
                       create: (ctx) => ChecklistDetailViewModel(
