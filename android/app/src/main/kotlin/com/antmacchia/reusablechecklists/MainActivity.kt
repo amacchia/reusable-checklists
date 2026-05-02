@@ -1,4 +1,4 @@
-package com.example.reusable_checklists
+package com.antmacchia.reusablechecklists
 
 import io.flutter.embedding.android.FlutterActivity
 
