@@ -51,10 +51,12 @@ class ChecklistListViewModel extends ChangeNotifier {
       final topSortIndex = _checklists.isEmpty
           ? 0
           : _checklists.map((c) => c.sortIndex).reduce(math.min) - 1;
+      final now = DateTime.now().toUtc();
       final checklist = Checklist(
         id: _uuid.v4(),
         name: name,
-        createdAt: DateTime.now(),
+        createdAt: now,
+        updatedAt: now,
         sortIndex: topSortIndex,
       );
       await _repository.saveChecklist(checklist);
@@ -153,6 +155,7 @@ class ChecklistListViewModel extends ChangeNotifier {
                 id: _uuid.v4(),
                 name: imported.name,
                 createdAt: imported.createdAt,
+                updatedAt: imported.updatedAt,
                 items: imported.items,
                 sortIndex: nextSortIndex--,
               )

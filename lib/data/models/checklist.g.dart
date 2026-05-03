@@ -20,6 +20,7 @@ class ChecklistAdapter extends TypeAdapter<Checklist> {
       id: fields[0] as String,
       name: fields[1] as String,
       createdAt: fields[2] as DateTime,
+      updatedAt: fields[5] as DateTime?,
       items: (fields[3] as List?)?.cast<ChecklistItem>(),
       sortIndex: fields[4] == null ? 0 : (fields[4] as num).toInt(),
     );
@@ -28,7 +29,7 @@ class ChecklistAdapter extends TypeAdapter<Checklist> {
   @override
   void write(BinaryWriter writer, Checklist obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class ChecklistAdapter extends TypeAdapter<Checklist> {
       ..writeByte(3)
       ..write(obj.items)
       ..writeByte(4)
-      ..write(obj.sortIndex);
+      ..write(obj.sortIndex)
+      ..writeByte(5)
+      ..write(obj.updatedAt);
   }
 
   @override

@@ -55,6 +55,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     if (trimmed.isEmpty || trimmed == _checklist!.name) return;
     try {
       _checklist!.name = trimmed;
+      _checklist!.markUpdated();
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
@@ -72,6 +73,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
       final item = _checklist!.items.firstWhere((i) => i.id == itemId);
       if (item.title == trimmed) return;
       item.title = trimmed;
+      _checklist!.markUpdated();
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
@@ -90,6 +92,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
         sortIndex: _checklist!.items.length,
       );
       _checklist!.items.add(item);
+      _checklist!.markUpdated();
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
@@ -104,6 +107,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     try {
       _checklist!.items.removeWhere((i) => i.id == itemId);
       _reindexItems();
+      _checklist!.markUpdated();
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
@@ -124,6 +128,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
         sorted[i].sortIndex = i;
       }
       _checklist!.items = sorted;
+      _checklist!.markUpdated();
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
@@ -138,6 +143,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     try {
       final item = _checklist!.items.firstWhere((i) => i.id == itemId);
       item.isChecked = !item.isChecked;
+      _checklist!.markUpdated();
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
@@ -153,6 +159,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
       for (final item in _checklist!.items) {
         item.isChecked = true;
       }
+      _checklist!.markUpdated();
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
@@ -168,6 +175,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
       for (final item in _checklist!.items) {
         item.isChecked = false;
       }
+      _checklist!.markUpdated();
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
@@ -193,6 +201,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
         rebuilt[i].sortIndex = i;
       }
       _checklist!.items = rebuilt;
+      _checklist!.markUpdated();
       await _repository.saveChecklist(_checklist!);
       notifyListeners();
     } catch (e) {
