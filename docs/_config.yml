@@ -1,0 +1,8 @@
+title: Reusable Checklists
+description: Minimalist, offline-first checklist app for Android.
+theme: jekyll-theme-cayman
+
+exclude:
+  - PRD.md
+  - STORE_LISTING.md
+  - IDEAS.md

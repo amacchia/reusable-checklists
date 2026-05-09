@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500" width="1024" height="500">
+  <!-- Background -->
+  <rect width="1024" height="500" fill="#1976D2"/>
+
+  <!-- Icon: rounded white card with three checklist rows -->
+  <rect x="120" y="110" width="280" height="280" rx="32" ry="32" fill="#FFFFFF"/>
+
+  <!-- Row 1: checked -->
+  <rect x="160" y="158" width="32" height="32" rx="6" ry="6" fill="#1976D2"/>
+  <path d="M 167 175 L 174 182 L 187 168" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="208" y="168" width="160" height="12" rx="6" ry="6" fill="#1976D2"/>
+
+  <!-- Row 2: checked -->
+  <rect x="160" y="234" width="32" height="32" rx="6" ry="6" fill="#1976D2"/>
+  <path d="M 167 251 L 174 258 L 187 244" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="208" y="244" width="160" height="12" rx="6" ry="6" fill="#1976D2"/>
+
+  <!-- Row 3: unchecked -->
+  <rect x="160" y="310" width="32" height="32" rx="6" ry="6" fill="none" stroke="#1976D2" stroke-width="3"/>
+  <rect x="208" y="320" width="160" height="12" rx="6" ry="6" fill="#1976D2" opacity="0.4"/>
+
+  <!-- Title -->
+  <text x="460" y="242" font-family="Inter, Manrope, Helvetica, Arial, sans-serif" font-size="88" font-weight="700" fill="#FFFFFF">Reusable Checklists</text>
+
+  <!-- Tagline -->
+  <text x="460" y="306" font-family="Inter, Manrope, Helvetica, Arial, sans-serif" font-size="40" font-weight="400" fill="#FFFFFF" opacity="0.85">Reuse the routine.</text>
+</svg>
