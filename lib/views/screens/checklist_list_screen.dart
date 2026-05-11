@@ -85,6 +85,36 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
     setState(_selectedIds.clear);
   }
 
+  void _resetSelected(BuildContext context, ChecklistListViewModel vm) {
+    final originalChecklists = vm.checklists
+        .where((c) => _selectedIds.contains(c.id))
+        .toList();
+    final count = originalChecklists.length;
+
+    for (final checklist in originalChecklists) {
+      unawaited(vm.resetChecklist(checklist.id));
+    }
+    _clearSelection();
+
+    final message = count == 1
+        ? AppStrings.checklistReset
+        : AppStrings.checklistsReset.replaceFirst('{count}', '$count');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        action: SnackBarAction(
+          label: AppStrings.undo,
+          onPressed: () {
+            for (final checklist in originalChecklists) {
+              unawaited(vm.saveChecklist(checklist));
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   void _deleteSelected(BuildContext context, ChecklistListViewModel vm) {
     final deletedChecklists = vm.checklists
         .where((c) => _selectedIds.contains(c.id))
@@ -137,7 +167,13 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
                         .replaceFirst('{count}', '${_selectedIds.length}')),
                     actions: [
                       IconButton(
+                        icon: const Icon(Icons.restart_alt),
+                        tooltip: AppStrings.reset,
+                        onPressed: () => _resetSelected(context, vm),
+                      ),
+                      IconButton(
                         icon: const Icon(Icons.delete_outline),
+                        tooltip: AppStrings.delete,
                         onPressed: () => _deleteSelected(context, vm),
                       ),
                     ],

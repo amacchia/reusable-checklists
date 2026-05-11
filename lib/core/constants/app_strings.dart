@@ -9,6 +9,7 @@ class AppStrings {
   static const save = 'Save';
   static const cancel = 'Cancel';
   static const delete = 'Delete';
+  static const reset = 'Reset';
   static const checkAll = 'Check All';
   static const uncheckAll = 'Uncheck All';
   static const addItem = 'Add item...';
@@ -18,6 +19,8 @@ class AppStrings {
   static const emptyItemsSubtitle = 'Add an item below';
   static const checklistDeleted = 'Checklist deleted';
   static const checklistsDeleted = '{count} checklists deleted';
+  static const checklistReset = 'Checklist reset';
+  static const checklistsReset = '{count} checklists reset';
   static const nSelected = '{count} selected';
   static const itemDeleted = 'Item deleted';
   static const completed = 'Completed';

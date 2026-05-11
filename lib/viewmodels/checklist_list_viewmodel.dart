@@ -109,6 +109,30 @@ class ChecklistListViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> resetChecklist(String id) async {
+    _errorMessage = null;
+    try {
+      final index = _checklists.indexWhere((c) => c.id == id);
+      if (index == -1) return;
+      if (_checklists[index].items.every((item) => !item.isChecked)) return;
+      final reset = _checklists[index].copyWith(
+        items: _checklists[index]
+            .items
+            .map((item) => item.copyWith(isChecked: false))
+            .toList(),
+        updatedAt: DateTime.now().toUtc(),
+      );
+      await _repository.saveChecklist(reset);
+      final updated = List<Checklist>.from(_checklists);
+      updated[index] = reset;
+      _checklists = updated;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
   Future<void> saveChecklist(Checklist checklist) async {
     _errorMessage = null;
     try {
