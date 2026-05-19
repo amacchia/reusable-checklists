@@ -92,13 +92,15 @@ class _ChecklistAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           actions: [
-            TextButton(
+            IconButton(
               onPressed: data.isEmpty ? null : vm.checkAll,
-              child: const Text(AppStrings.checkAll),
+              icon: const Icon(Icons.done_all),
+              tooltip: AppStrings.checkAll,
             ),
-            TextButton(
+            IconButton(
               onPressed: data.isEmpty ? null : vm.uncheckAll,
-              child: const Text(AppStrings.uncheckAll),
+              icon: const Icon(Icons.remove_done),
+              tooltip: AppStrings.uncheckAll,
             ),
           ],
         );
