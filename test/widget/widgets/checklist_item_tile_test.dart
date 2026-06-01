@@ -12,7 +12,7 @@ void main() {
       return MaterialApp(
         home: Scaffold(
           body: ReorderableListView(
-            onReorder: (a, b) {},
+            onReorderItem: (a, b) {},
             children: [
               ChecklistItemTile(
                 key: ValueKey(item.id),

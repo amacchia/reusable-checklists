@@ -169,7 +169,7 @@ class _ItemLists extends StatelessWidget {
       slivers: [
         SliverReorderableList(
           itemCount: unchecked.length,
-          onReorder: vm.reorderItems,
+          onReorderItem: vm.reorderItems,
           itemBuilder: (context, index) {
             final item = unchecked[index];
             return ChecklistItemTile(

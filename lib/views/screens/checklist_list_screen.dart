@@ -216,7 +216,7 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: vm.checklists.length,
       buildDefaultDragHandles: false,
-      onReorder: vm.reorderChecklists,
+      onReorderItem: vm.reorderChecklists,
       itemBuilder: (context, index) {
         final checklist = vm.checklists[index];
         return ChecklistTile(
