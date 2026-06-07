@@ -157,8 +157,8 @@ void main() {
 
       await tester.pumpWidget(buildApp(mockVm));
 
-      expect(find.text(AppStrings.checkAll), findsOneWidget);
-      expect(find.text(AppStrings.uncheckAll), findsOneWidget);
+      expect(find.byTooltip(AppStrings.checkAll), findsOneWidget);
+      expect(find.byTooltip(AppStrings.uncheckAll), findsOneWidget);
     });
 
     testWidgets('Check All calls vm.checkAll', (tester) async {
@@ -177,7 +177,7 @@ void main() {
       when(() => mockVm.checkAll()).thenAnswer((_) async {});
 
       await tester.pumpWidget(buildApp(mockVm));
-      await tester.tap(find.text(AppStrings.checkAll));
+      await tester.tap(find.byTooltip(AppStrings.checkAll));
 
       verify(() => mockVm.checkAll()).called(1);
     });
@@ -198,7 +198,7 @@ void main() {
       when(() => mockVm.uncheckAll()).thenAnswer((_) async {});
 
       await tester.pumpWidget(buildApp(mockVm));
-      await tester.tap(find.text(AppStrings.uncheckAll));
+      await tester.tap(find.byTooltip(AppStrings.uncheckAll));
 
       verify(() => mockVm.uncheckAll()).called(1);
     });
