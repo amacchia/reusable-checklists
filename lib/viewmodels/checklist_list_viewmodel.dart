@@ -12,7 +12,7 @@ class ChecklistListViewModel extends ChangeNotifier {
   final Uuid _uuid;
 
   ChecklistListViewModel(this._repository, {Uuid? uuid})
-      : _uuid = uuid ?? const Uuid();
+    : _uuid = uuid ?? const Uuid();
 
   List<Checklist> _checklists = [];
   bool _isLoading = false;
@@ -116,8 +116,7 @@ class ChecklistListViewModel extends ChangeNotifier {
       if (index == -1) return;
       if (_checklists[index].items.every((item) => !item.isChecked)) return;
       final reset = _checklists[index].copyWith(
-        items: _checklists[index]
-            .items
+        items: _checklists[index].items
             .map((item) => item.copyWith(isChecked: false))
             .toList(),
         updatedAt: DateTime.now().toUtc(),

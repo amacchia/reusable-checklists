@@ -18,9 +18,7 @@ class MockChecklistListViewModel extends Mock
 Widget buildApp(ChecklistListViewModel vm) {
   return MultiProvider(
     providers: [
-      Provider<ChecklistRepository>(
-        create: (_) => MockChecklistRepository(),
-      ),
+      Provider<ChecklistRepository>(create: (_) => MockChecklistRepository()),
       ChangeNotifierProvider<ChecklistListViewModel>.value(value: vm),
     ],
     child: MaterialApp(
@@ -40,11 +38,9 @@ void main() {
   });
 
   setUpAll(() {
-    registerFallbackValue(Checklist(
-      id: 'fallback',
-      name: 'fallback',
-      createdAt: DateTime(2024),
-    ));
+    registerFallbackValue(
+      Checklist(id: 'fallback', name: 'fallback', createdAt: DateTime(2024)),
+    );
   });
 
   group('ChecklistListScreen', () {
@@ -110,8 +106,9 @@ void main() {
       expect(find.text(AppStrings.newChecklist), findsOneWidget);
     });
 
-    testWidgets('creating checklist via dialog calls createChecklist',
-        (tester) async {
+    testWidgets('creating checklist via dialog calls createChecklist', (
+      tester,
+    ) async {
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([]);
       when(() => mockVm.createChecklist(any())).thenAnswer((_) async {});
@@ -145,8 +142,9 @@ void main() {
       expect(find.byType(Checkbox), findsOneWidget);
     });
 
-    testWidgets('tapping tiles in selection mode toggles selection',
-        (tester) async {
+    testWidgets('tapping tiles in selection mode toggles selection', (
+      tester,
+    ) async {
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
@@ -183,8 +181,11 @@ void main() {
     });
 
     testWidgets('delete selected shows snackbar with undo', (tester) async {
-      final checklist =
-          Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024));
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+      );
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([checklist]);
       when(() => mockVm.deleteChecklist('1')).thenAnswer((_) async {});
@@ -203,8 +204,11 @@ void main() {
     });
 
     testWidgets('undo after delete calls saveChecklist', (tester) async {
-      final checklist =
-          Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024));
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+      );
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([checklist]);
       when(() => mockVm.deleteChecklist('1')).thenAnswer((_) async {});
@@ -224,8 +228,9 @@ void main() {
       verify(() => mockVm.saveChecklist(checklist)).called(1);
     });
 
-    testWidgets('tapping an already-selected tile deselects it',
-        (tester) async {
+    testWidgets('tapping an already-selected tile deselects it', (
+      tester,
+    ) async {
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
@@ -248,8 +253,9 @@ void main() {
       expect(find.text('1 selected'), findsOneWidget);
     });
 
-    testWidgets('tapping the selection checkbox toggles selection',
-        (tester) async {
+    testWidgets('tapping the selection checkbox toggles selection', (
+      tester,
+    ) async {
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
@@ -268,9 +274,14 @@ void main() {
       expect(find.text(AppStrings.appTitle), findsOneWidget);
     });
 
-    testWidgets('deleting multiple selected shows plural snackbar',
-        (tester) async {
-      final a = Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024));
+    testWidgets('deleting multiple selected shows plural snackbar', (
+      tester,
+    ) async {
+      final a = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+      );
       final b = Checklist(id: '2', name: 'Travel', createdAt: DateTime(2024));
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([a, b]);
@@ -348,9 +359,9 @@ void main() {
       expect(find.text('DETAIL_PAGE'), findsOneWidget);
     });
 
-    testWidgets(
-        'popping back from /detail triggers didPopNext and reloads',
-        (tester) async {
+    testWidgets('popping back from /detail triggers didPopNext and reloads', (
+      tester,
+    ) async {
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
@@ -382,7 +393,9 @@ void main() {
       expect(find.text('DETAIL_PAGE'), findsOneWidget);
 
       // Pop back - didPopNext should fire on the list screen.
-      final BuildContext detailContext = tester.element(find.text('DETAIL_PAGE'));
+      final BuildContext detailContext = tester.element(
+        find.text('DETAIL_PAGE'),
+      );
       Navigator.of(detailContext).pop();
       await tester.pumpAndSettle();
 
@@ -390,8 +403,9 @@ void main() {
       verify(() => mockVm.loadChecklists()).called(greaterThanOrEqualTo(1));
     });
 
-    testWidgets('back gesture during selection mode clears selection',
-        (tester) async {
+    testWidgets('back gesture during selection mode clears selection', (
+      tester,
+    ) async {
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),

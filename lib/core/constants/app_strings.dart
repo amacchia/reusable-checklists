@@ -32,7 +32,8 @@ class AppStrings {
   static const themeLight = 'Light';
   static const themeDark = 'Dark';
   static const sourceCode = 'Source Code';
-  static const sourceCodeUrl = 'https://github.com/amacchia/reusable-checklists';
+  static const sourceCodeUrl =
+      'https://github.com/amacchia/reusable-checklists';
   static const data = 'Data';
   static const exportJson = 'Export to clipboard';
   static const importJson = 'Import from clipboard';

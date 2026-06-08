@@ -71,9 +71,9 @@ void main() {
     });
 
     testWidgets('shows empty state when no items', (tester) async {
-      when(() => mockVm.checklist).thenReturn(
-        Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
-      );
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
       stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -103,14 +103,12 @@ void main() {
       expect(find.text('Completed'), findsNothing);
     });
 
-    testWidgets('shows Completed section when checked items exist',
-        (tester) async {
-      final unchecked = [
-        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
-      ];
+    testWidgets('shows Completed section when checked items exist', (
+      tester,
+    ) async {
+      final unchecked = [ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0)];
       final checked = [
-        ChecklistItem(
-            id: 'b', title: 'Bread', sortIndex: 1, isChecked: true),
+        ChecklistItem(id: 'b', title: 'Bread', sortIndex: 1, isChecked: true),
       ];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
@@ -129,11 +127,8 @@ void main() {
       expect(find.text('Completed'), findsOneWidget);
     });
 
-    testWidgets('hides Completed header when no checked items',
-        (tester) async {
-      final items = [
-        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
-      ];
+    testWidgets('hides Completed header when no checked items', (tester) async {
+      final items = [ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0)];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
           id: '1',
@@ -150,9 +145,9 @@ void main() {
     });
 
     testWidgets('shows Check All and Uncheck All buttons', (tester) async {
-      when(() => mockVm.checklist).thenReturn(
-        Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
-      );
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
       stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -162,9 +157,7 @@ void main() {
     });
 
     testWidgets('Check All calls vm.checkAll', (tester) async {
-      final items = [
-        ChecklistItem(id: 'a', title: 'Test', sortIndex: 0),
-      ];
+      final items = [ChecklistItem(id: 'a', title: 'Test', sortIndex: 0)];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
           id: '1',
@@ -183,9 +176,7 @@ void main() {
     });
 
     testWidgets('Uncheck All calls vm.uncheckAll', (tester) async {
-      final items = [
-        ChecklistItem(id: 'a', title: 'Test', sortIndex: 0),
-      ];
+      final items = [ChecklistItem(id: 'a', title: 'Test', sortIndex: 0)];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
           id: '1',
@@ -204,9 +195,9 @@ void main() {
     });
 
     testWidgets('shows add item input bar', (tester) async {
-      when(() => mockVm.checklist).thenReturn(
-        Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
-      );
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
       stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -216,24 +207,23 @@ void main() {
     });
 
     testWidgets('TextField uses sentence capitalization', (tester) async {
-      when(() => mockVm.checklist).thenReturn(
-        Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
-      );
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
       stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
 
-      final textField =
-          tester.widget<TextField>(find.byType(TextField));
-      expect(
-          textField.textCapitalization, TextCapitalization.sentences);
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.textCapitalization, TextCapitalization.sentences);
     });
 
-    testWidgets('add item button calls addItem and clears input',
-        (tester) async {
-      when(() => mockVm.checklist).thenReturn(
-        Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
-      );
+    testWidgets('add item button calls addItem and clears input', (
+      tester,
+    ) async {
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
       stubItems(mockVm);
       when(() => mockVm.addItem(any())).thenAnswer((_) async {});
 
@@ -246,9 +236,9 @@ void main() {
     });
 
     testWidgets('does not add empty items', (tester) async {
-      when(() => mockVm.checklist).thenReturn(
-        Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
-      );
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
       stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -259,9 +249,7 @@ void main() {
     });
 
     testWidgets('toggle calls vm.toggleItem', (tester) async {
-      final items = [
-        ChecklistItem(id: 'a', title: 'Test', sortIndex: 0),
-      ];
+      final items = [ChecklistItem(id: 'a', title: 'Test', sortIndex: 0)];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
           id: '1',
@@ -280,9 +268,9 @@ void main() {
     });
 
     testWidgets('add item via keyboard submit', (tester) async {
-      when(() => mockVm.checklist).thenReturn(
-        Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
-      );
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
       stubItems(mockVm);
       when(() => mockVm.addItem(any())).thenAnswer((_) async {});
 
@@ -296,8 +284,7 @@ void main() {
 
     testWidgets('toggling a checked item calls vm.toggleItem', (tester) async {
       final checked = [
-        ChecklistItem(
-            id: 'c', title: 'Bread', sortIndex: 0, isChecked: true),
+        ChecklistItem(id: 'c', title: 'Bread', sortIndex: 0, isChecked: true),
       ];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
@@ -319,8 +306,7 @@ void main() {
 
     testWidgets('deleting a checked item calls vm.removeItem', (tester) async {
       final checked = [
-        ChecklistItem(
-            id: 'c', title: 'Bread', sortIndex: 0, isChecked: true),
+        ChecklistItem(id: 'c', title: 'Bread', sortIndex: 0, isChecked: true),
       ];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
@@ -345,8 +331,9 @@ void main() {
       expect(screen, isA<ChecklistDetailScreen>());
     });
 
-    testWidgets('rename button opens dialog with current name and saves',
-        (tester) async {
+    testWidgets('rename button opens dialog with current name and saves', (
+      tester,
+    ) async {
       when(() => mockVm.checklist).thenReturn(
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
       );
@@ -362,8 +349,10 @@ void main() {
         matching: find.byType(TextField),
       );
       expect(find.text(AppStrings.renameChecklist), findsWidgets);
-      expect(tester.widget<TextField>(dialogField).controller?.text,
-          'Groceries');
+      expect(
+        tester.widget<TextField>(dialogField).controller?.text,
+        'Groceries',
+      );
 
       await tester.enterText(dialogField, 'Weekly Shop');
       await tester.tap(find.text(AppStrings.save));
@@ -372,11 +361,10 @@ void main() {
       verify(() => mockVm.renameChecklist('Weekly Shop')).called(1);
     });
 
-    testWidgets('item edit icon opens dialog and saves new title',
-        (tester) async {
-      final items = [
-        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
-      ];
+    testWidgets('item edit icon opens dialog and saves new title', (
+      tester,
+    ) async {
+      final items = [ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0)];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
           id: '1',
@@ -411,9 +399,7 @@ void main() {
     });
 
     testWidgets('delete item shows snackbar', (tester) async {
-      final items = [
-        ChecklistItem(id: 'a', title: 'Test', sortIndex: 0),
-      ];
+      final items = [ChecklistItem(id: 'a', title: 'Test', sortIndex: 0)];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
           id: '1',
@@ -453,9 +439,15 @@ void main() {
       await tester.tap(find.widgetWithText(SnackBarAction, AppStrings.undo));
       await tester.pumpAndSettle();
 
-      verify(() => mockVm.restoreItem(any(that: predicate<ChecklistItem>(
-              (i) => i.id == 'a' && i.title == 'Milk'))))
-          .called(1);
+      verify(
+        () => mockVm.restoreItem(
+          any(
+            that: predicate<ChecklistItem>(
+              (i) => i.id == 'a' && i.title == 'Milk',
+            ),
+          ),
+        ),
+      ).called(1);
     });
   });
 }

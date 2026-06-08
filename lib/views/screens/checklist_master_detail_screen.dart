@@ -80,7 +80,10 @@ class _ChecklistMasterDetailScreenState
     });
   }
 
-  void _resetSelected(ChecklistListViewModel listVm) {
+  void _resetSelected(
+    BuildContext scaffoldContext,
+    ChecklistListViewModel listVm,
+  ) {
     final originalChecklists = listVm.checklists
         .where((c) => _selectedIds.contains(c.id))
         .toList();
@@ -92,7 +95,7 @@ class _ChecklistMasterDetailScreenState
     final message = count == 1
         ? AppStrings.checklistReset
         : AppStrings.checklistsReset.replaceFirst('{count}', '$count');
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
       SnackBar(
         content: Text(message),
         action: SnackBarAction(
@@ -107,7 +110,10 @@ class _ChecklistMasterDetailScreenState
     );
   }
 
-  void _deleteSelected(ChecklistListViewModel listVm) {
+  void _deleteSelected(
+    BuildContext scaffoldContext,
+    ChecklistListViewModel listVm,
+  ) {
     final deletedChecklists = listVm.checklists
         .where((c) => _selectedIds.contains(c.id))
         .toList();
@@ -122,7 +128,7 @@ class _ChecklistMasterDetailScreenState
     final message = count == 1
         ? AppStrings.checklistDeleted
         : AppStrings.checklistsDeleted.replaceFirst('{count}', '$count');
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
       SnackBar(
         content: Text(message),
         action: SnackBarAction(
@@ -162,38 +168,14 @@ class _ChecklistMasterDetailScreenState
               _deselectChecklist();
             }
           },
-          child: Scaffold(
-            appBar: _isSelectionMode
-                ? AppBar(
-                    leading: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: _clearSelection,
-                    ),
-                    title: Text(AppStrings.nSelected
-                        .replaceFirst('{count}', '${_selectedIds.length}')),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.restart_alt),
-                        tooltip: AppStrings.reset,
-                        onPressed: () => _resetSelected(listVm),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        tooltip: AppStrings.delete,
-                        onPressed: () => _deleteSelected(listVm),
-                      ),
-                    ],
-                  )
-                : null,
-            body: Row(
-              children: [
-                SizedBox(
-                  width: MediaQuery.sizeOf(context).width * splitRatio,
-                  child: _buildListPanel(listVm, showSettings),
-                ),
-                Expanded(child: _buildDetailPanel()),
-              ],
-            ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: MediaQuery.sizeOf(context).width * splitRatio,
+                child: _buildListPanel(listVm, showSettings),
+              ),
+              Expanded(child: _buildDetailPanel()),
+            ],
           ),
         );
       },
@@ -203,15 +185,45 @@ class _ChecklistMasterDetailScreenState
   Widget _buildListPanel(ChecklistListViewModel listVm, bool showSettings) {
     return Scaffold(
       appBar: _isSelectionMode
-          ? null
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: _clearSelection,
+              ),
+              title: Text(
+                AppStrings.nSelected.replaceFirst(
+                  '{count}',
+                  '${_selectedIds.length}',
+                ),
+              ),
+              actions: [
+                Builder(
+                  builder: (context) {
+                    return IconButton(
+                      icon: const Icon(Icons.restart_alt),
+                      tooltip: AppStrings.reset,
+                      onPressed: () => _resetSelected(context, listVm),
+                    );
+                  },
+                ),
+                Builder(
+                  builder: (context) {
+                    return IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      tooltip: AppStrings.delete,
+                      onPressed: () => _deleteSelected(context, listVm),
+                    );
+                  },
+                ),
+              ],
+            )
           : AppBar(
               title: const Text(AppStrings.appTitle),
               actions: [
                 if (showSettings)
                   IconButton(
                     icon: const Icon(Icons.settings_outlined),
-                    onPressed: () =>
-                        Navigator.pushNamed(context, '/settings'),
+                    onPressed: () => Navigator.pushNamed(context, '/settings'),
                   ),
               ],
             ),

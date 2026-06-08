@@ -16,10 +16,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ChecklistTile(
-              checklist: checklist,
-              onTap: () {},
-            ),
+            body: ChecklistTile(checklist: checklist, onTap: () {}),
           ),
         ),
       );
@@ -41,10 +38,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ChecklistTile(
-              checklist: checklist,
-              onTap: () {},
-            ),
+            body: ChecklistTile(checklist: checklist, onTap: () {}),
           ),
         ),
       );
@@ -62,10 +56,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ChecklistTile(
-              checklist: checklist,
-              onTap: () {},
-            ),
+            body: ChecklistTile(checklist: checklist, onTap: () {}),
           ),
         ),
       );
@@ -142,8 +133,9 @@ void main() {
       expect(find.byType(Checkbox), findsOneWidget);
     });
 
-    testWidgets('calls onSelectionTap when tapped in selection mode',
-        (tester) async {
+    testWidgets('calls onSelectionTap when tapped in selection mode', (
+      tester,
+    ) async {
       var selectionTapped = false;
       var normalTapped = false;
       final checklist = Checklist(
@@ -206,10 +198,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ChecklistTile(
-              checklist: checklist,
-              onTap: () {},
-            ),
+            body: ChecklistTile(checklist: checklist, onTap: () {}),
           ),
         ),
       );

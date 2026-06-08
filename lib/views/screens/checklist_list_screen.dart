@@ -55,8 +55,9 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
     if (error == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       vm.clearError();
     });
   }
@@ -165,8 +166,12 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
                       icon: const Icon(Icons.close),
                       onPressed: _clearSelection,
                     ),
-                    title: Text(AppStrings.nSelected
-                        .replaceFirst('{count}', '${_selectedIds.length}')),
+                    title: Text(
+                      AppStrings.nSelected.replaceFirst(
+                        '{count}',
+                        '${_selectedIds.length}',
+                      ),
+                    ),
                     actions: [
                       IconButton(
                         icon: const Icon(Icons.restart_alt),
@@ -271,7 +276,11 @@ class ChecklistListBody extends StatelessWidget {
               customTap(checklist.id);
             } else {
               unawaited(
-                Navigator.pushNamed(context, '/detail', arguments: checklist.id),
+                Navigator.pushNamed(
+                  context,
+                  '/detail',
+                  arguments: checklist.id,
+                ),
               );
             }
           },

@@ -31,8 +31,8 @@ class Checklist {
     DateTime? updatedAt,
     List<ChecklistItem>? items,
     this.sortIndex = 0,
-  })  : updatedAt = updatedAt ?? createdAt,
-        items = items ?? [];
+  }) : updatedAt = updatedAt ?? createdAt,
+       items = items ?? [];
 
   void markUpdated() {
     updatedAt = DateTime.now().toUtc();
@@ -59,13 +59,13 @@ class Checklist {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'updatedAt': updatedAt.toUtc().toIso8601String(),
-        'sortIndex': sortIndex,
-        'items': items.map((i) => i.toJson()).toList(),
-      };
+    'id': id,
+    'name': name,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    'sortIndex': sortIndex,
+    'items': items.map((i) => i.toJson()).toList(),
+  };
 
   factory Checklist.fromJson(Map<String, dynamic> json) {
     final createdAt = DateTime.parse(json['createdAt'] as String).toUtc();
@@ -74,8 +74,9 @@ class Checklist {
       id: json['id'] as String,
       name: json['name'] as String,
       createdAt: createdAt,
-      updatedAt:
-          updatedAtRaw != null ? DateTime.parse(updatedAtRaw).toUtc() : createdAt,
+      updatedAt: updatedAtRaw != null
+          ? DateTime.parse(updatedAtRaw).toUtc()
+          : createdAt,
       sortIndex: (json['sortIndex'] as num?)?.toInt() ?? 0,
       items: (json['items'] as List?)
           ?.map((e) => ChecklistItem.fromJson(e as Map<String, dynamic>))

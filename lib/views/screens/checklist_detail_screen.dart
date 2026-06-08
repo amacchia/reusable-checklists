@@ -46,8 +46,9 @@ class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
     if (error == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       vm.clearError();
     });
   }
@@ -70,8 +71,10 @@ class ChecklistDetailAppBar extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ChecklistDetailViewModel,
-        ({String name, bool isEmpty, bool hasChecklist})>(
+    return Selector<
+      ChecklistDetailViewModel,
+      ({String name, bool isEmpty, bool hasChecklist})
+    >(
       selector: (_, vm) => (
         name: vm.checklist?.name ?? '',
         isEmpty: vm.sortedItems.isEmpty,
@@ -88,8 +91,7 @@ class ChecklistDetailAppBar extends StatelessWidget
             child: Tooltip(
               message: AppStrings.renameChecklist,
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Text(data.name),
               ),
             ),
@@ -206,19 +208,16 @@ class _ItemLists extends StatelessWidget {
             ),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final item = checked[index];
-                return ChecklistItemTile(
-                  key: ValueKey(item.id),
-                  item: item,
-                  onToggle: () => vm.toggleItem(item.id),
-                  onEdit: () => _editItem(context, vm, item),
-                  onDelete: () => _deleteItem(context, vm, item.id),
-                );
-              },
-              childCount: checked.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final item = checked[index];
+              return ChecklistItemTile(
+                key: ValueKey(item.id),
+                item: item,
+                onToggle: () => vm.toggleItem(item.id),
+                onEdit: () => _editItem(context, vm, item),
+                onDelete: () => _deleteItem(context, vm, item.id),
+              );
+            }, childCount: checked.length),
           ),
         ],
       ],
@@ -226,7 +225,10 @@ class _ItemLists extends StatelessWidget {
   }
 
   void _deleteItem(
-      BuildContext context, ChecklistDetailViewModel vm, String itemId) {
+    BuildContext context,
+    ChecklistDetailViewModel vm,
+    String itemId,
+  ) {
     final messenger = ScaffoldMessenger.of(context);
     final item = vm.checklist?.items.firstWhere((i) => i.id == itemId);
     if (item == null) return;
@@ -292,9 +294,7 @@ class _AddItemBarState extends State<AddItemBar> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerLow,
-        border: Border(
-          top: BorderSide(color: colorScheme.outlineVariant),
-        ),
+        border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
       ),
       child: SafeArea(
         top: false,
@@ -311,10 +311,7 @@ class _AddItemBarState extends State<AddItemBar> {
                 onSubmitted: (_) => _addItem(),
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: _addItem,
-            ),
+            IconButton(icon: const Icon(Icons.add), onPressed: _addItem),
           ],
         ),
       ),

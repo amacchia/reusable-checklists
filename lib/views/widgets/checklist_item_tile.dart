@@ -61,8 +61,10 @@ class ChecklistItemTile extends StatelessWidget {
                     index: reorderIndex!,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child:
-                          Icon(Icons.drag_handle, color: colorScheme.outline),
+                      child: Icon(
+                        Icons.drag_handle,
+                        color: colorScheme.outline,
+                      ),
                     ),
                   ),
               ],

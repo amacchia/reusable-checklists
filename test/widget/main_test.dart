@@ -59,8 +59,9 @@ void main() {
     expect(find.byType(AdaptiveLayoutShell), findsOneWidget);
   });
 
-  testWidgets('MainApp navigates to /settings via push on compact',
-      (tester) async {
+  testWidgets('MainApp navigates to /settings via push on compact', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -90,8 +91,9 @@ void main() {
     expect(route, isNotNull);
   });
 
-  testWidgets('onGenerateRoute returns null for unknown routes',
-      (tester) async {
+  testWidgets('onGenerateRoute returns null for unknown routes', (
+    tester,
+  ) async {
     await tester.pumpWidget(app.MainApp(prefs: prefs));
     await tester.pump();
 
@@ -102,8 +104,9 @@ void main() {
     );
   });
 
-  testWidgets('onGenerateRoute returns null for /detail without String args',
-      (tester) async {
+  testWidgets('onGenerateRoute returns null for /detail without String args', (
+    tester,
+  ) async {
     await tester.pumpWidget(app.MainApp(prefs: prefs));
     await tester.pump();
 
