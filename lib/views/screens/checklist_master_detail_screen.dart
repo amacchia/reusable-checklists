@@ -30,6 +30,7 @@ class _ChecklistMasterDetailScreenState
 
   @override
   void dispose() {
+    _detailVm?.removeListener(_onDetailVmChanged);
     _detailVm?.dispose();
     super.dispose();
   }
@@ -39,14 +40,29 @@ class _ChecklistMasterDetailScreenState
     _detailVm?.dispose();
     final repo = context.read<ChecklistRepository>();
     _detailVm = ChecklistDetailViewModel(repo);
+    _detailVm!.addListener(_onDetailVmChanged);
     unawaited(_detailVm!.loadChecklist(id));
     setState(() {
       _selectedChecklistId = id;
     });
   }
 
+  void _onDetailVmChanged() {
+    final listVm = context.read<ChecklistListViewModel>();
+    final detailVm = _detailVm;
+    if (detailVm == null || detailVm.checklist == null) return;
+    final id = detailVm.checklist!.id;
+    final index = listVm.checklists.indexWhere((c) => c.id == id);
+    if (index == -1) return;
+    final updated = detailVm.checklist!.copyWith();
+    final list = List.of(listVm.checklists);
+    list[index] = updated;
+    listVm.updateChecklistInList(updated);
+  }
+
   void _deselectChecklist() {
     if (_selectedChecklistId == null) return;
+    _detailVm?.removeListener(_onDetailVmChanged);
     _detailVm?.dispose();
     _detailVm = null;
     setState(() {

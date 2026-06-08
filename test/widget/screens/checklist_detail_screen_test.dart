@@ -450,10 +450,12 @@ void main() {
       ).called(1);
     });
 
-    testWidgets('shows error snackbar when errorMessage is set', (tester) async {
-      when(() => mockVm.checklist).thenReturn(
-        Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)),
-      );
+    testWidgets('shows error snackbar when errorMessage is set', (
+      tester,
+    ) async {
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
       stubItems(mockVm);
 
       await tester.pumpWidget(buildApp(mockVm));
@@ -461,15 +463,17 @@ void main() {
 
       // Manually trigger the snackbar via the ScaffoldMessenger
       final scaffoldContext = tester.element(find.byType(Scaffold));
-      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-        const SnackBar(content: Text('Something went wrong')),
-      );
+      ScaffoldMessenger.of(
+        scaffoldContext,
+      ).showSnackBar(const SnackBar(content: Text('Something went wrong')));
       await tester.pumpAndSettle();
 
       expect(find.text('Something went wrong'), findsOneWidget);
     });
 
-    testWidgets('ChecklistDetailBody constrainWidth on expanded', (tester) async {
+    testWidgets('ChecklistDetailBody constrainWidth on expanded', (
+      tester,
+    ) async {
       final items = [ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0)];
       when(() => mockVm.checklist).thenReturn(
         Checklist(
@@ -488,15 +492,17 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      await tester.pumpWidget(ChangeNotifierProvider<ChecklistDetailViewModel>.value(
-        value: mockVm,
-        child: MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: const Scaffold(
-            body: ChecklistDetailBody(constrainWidth: true),
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ChecklistDetailViewModel>.value(
+          value: mockVm,
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const Scaffold(
+              body: ChecklistDetailBody(constrainWidth: true),
+            ),
           ),
         ),
-      ));
+      );
 
       expect(find.byType(ChecklistDetailBody), findsOneWidget);
     });

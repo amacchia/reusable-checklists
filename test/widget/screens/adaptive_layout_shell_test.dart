@@ -11,6 +11,7 @@ import 'package:reusable_checklists/viewmodels/theme_viewmodel.dart';
 import 'package:reusable_checklists/views/screens/adaptive_layout_shell.dart';
 
 class MockChecklistRepository extends Mock implements ChecklistRepository {}
+
 class MockSettingsRepository extends Mock implements SettingsRepository {}
 
 void main() {
@@ -48,11 +49,7 @@ void main() {
         ),
       ],
       child: const MaterialApp(
-        home: SizedBox(
-          width: 1000,
-          height: 800,
-          child: AdaptiveLayoutShell(),
-        ),
+        home: SizedBox(width: 1000, height: 800, child: AdaptiveLayoutShell()),
       ),
     );
   }
@@ -72,8 +69,9 @@ void main() {
       expect(find.byType(NavigationRail), findsOneWidget);
     });
 
-    testWidgets('tapping settings rail destination updates selection',
-        (tester) async {
+    testWidgets('tapping settings rail destination updates selection', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1000, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -91,8 +89,9 @@ void main() {
       expect(rail.selectedIndex, 1);
     });
 
-    testWidgets('tapping checklists rail destination updates selection',
-        (tester) async {
+    testWidgets('tapping checklists rail destination updates selection', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1000, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {

@@ -22,6 +22,16 @@ class ChecklistListViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+  void updateChecklistInList(Checklist checklist) {
+    final index = _checklists.indexWhere((c) => c.id == checklist.id);
+    if (index == -1) return;
+    final updated = List<Checklist>.from(_checklists);
+    updated[index] = checklist;
+    _sort(updated);
+    _checklists = updated;
+    notifyListeners();
+  }
+
   void clearError() {
     if (_errorMessage == null) return;
     _errorMessage = null;

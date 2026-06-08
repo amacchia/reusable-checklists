@@ -523,8 +523,9 @@ void main() {
       verify(() => mockVm.saveChecklist(checklist)).called(1);
     });
 
-    testWidgets('hides settings icon when showSettingsAction is false',
-        (tester) async {
+    testWidgets('hides settings icon when showSettingsAction is false', (
+      tester,
+    ) async {
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([]);
 
@@ -546,7 +547,9 @@ void main() {
       expect(find.byIcon(Icons.settings_outlined), findsNothing);
     });
 
-    testWidgets('shows error snackbar when errorMessage is set', (tester) async {
+    testWidgets('shows error snackbar when errorMessage is set', (
+      tester,
+    ) async {
       when(() => mockVm.isLoading).thenReturn(false);
       when(() => mockVm.checklists).thenReturn([]);
 

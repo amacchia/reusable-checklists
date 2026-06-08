@@ -311,31 +311,36 @@ void main() {
         );
       });
 
-      test('import sets errorMessage and rethrows on repository failure',
-          () async {
-        final original = Checklist(
-          id: 'a',
-          name: 'Original',
-          createdAt: DateTime.utc(2024),
-          items: [ChecklistItem(id: 'x', title: 'Milk', sortIndex: 0)],
-        );
-        when(() => mockRepository.getAllChecklists())
-            .thenAnswer((_) async => [original]);
-        when(() => mockRepository.saveChecklist(any()))
-            .thenThrow(Exception('Write failed'));
+      test(
+        'import sets errorMessage and rethrows on repository failure',
+        () async {
+          final original = Checklist(
+            id: 'a',
+            name: 'Original',
+            createdAt: DateTime.utc(2024),
+            items: [ChecklistItem(id: 'x', title: 'Milk', sortIndex: 0)],
+          );
+          when(
+            () => mockRepository.getAllChecklists(),
+          ).thenAnswer((_) async => [original]);
+          when(
+            () => mockRepository.saveChecklist(any()),
+          ).thenThrow(Exception('Write failed'));
 
-        await viewModel.loadChecklists();
-        final exported = viewModel.exportAsJson();
+          await viewModel.loadChecklists();
+          final exported = viewModel.exportAsJson();
 
-        // Re-stub getAllChecklists for the loadChecklists call inside importFromJson.
-        when(() => mockRepository.getAllChecklists())
-            .thenAnswer((_) async => [original]);
+          // Re-stub getAllChecklists for the loadChecklists call inside importFromJson.
+          when(
+            () => mockRepository.getAllChecklists(),
+          ).thenAnswer((_) async => [original]);
 
-        expect(
-          () => viewModel.importFromJson(exported),
-          throwsA(isA<Exception>()),
-        );
-      });
+          expect(
+            () => viewModel.importFromJson(exported),
+            throwsA(isA<Exception>()),
+          );
+        },
+      );
     });
 
     group('resetChecklist', () {
@@ -345,17 +350,29 @@ void main() {
           name: 'Groceries',
           createdAt: DateTime(2024),
           items: [
-            ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0, isChecked: true),
+            ChecklistItem(
+              id: 'a',
+              title: 'Milk',
+              sortIndex: 0,
+              isChecked: true,
+            ),
             ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
           ],
         );
-        when(() => mockRepository.getAllChecklists()).thenAnswer((_) async => [checklist]);
-        when(() => mockRepository.saveChecklist(any())).thenAnswer((_) async {});
+        when(
+          () => mockRepository.getAllChecklists(),
+        ).thenAnswer((_) async => [checklist]);
+        when(
+          () => mockRepository.saveChecklist(any()),
+        ).thenAnswer((_) async {});
 
         await viewModel.loadChecklists();
         await viewModel.resetChecklist('1');
 
-        expect(viewModel.checklists.first.items.every((i) => !i.isChecked), true);
+        expect(
+          viewModel.checklists.first.items.every((i) => !i.isChecked),
+          true,
+        );
         verify(() => mockRepository.saveChecklist(any())).called(1);
       });
 
@@ -366,7 +383,9 @@ void main() {
           createdAt: DateTime(2024),
           items: [ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0)],
         );
-        when(() => mockRepository.getAllChecklists()).thenAnswer((_) async => [checklist]);
+        when(
+          () => mockRepository.getAllChecklists(),
+        ).thenAnswer((_) async => [checklist]);
 
         await viewModel.loadChecklists();
         await viewModel.resetChecklist('1');
@@ -375,7 +394,9 @@ void main() {
       });
 
       test('is no-op when checklist not found', () async {
-        when(() => mockRepository.getAllChecklists()).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.getAllChecklists(),
+        ).thenAnswer((_) async => []);
 
         await viewModel.loadChecklists();
         await viewModel.resetChecklist('nonexistent');
@@ -388,10 +409,21 @@ void main() {
           id: '1',
           name: 'Groceries',
           createdAt: DateTime(2024),
-          items: [ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0, isChecked: true)],
+          items: [
+            ChecklistItem(
+              id: 'a',
+              title: 'Milk',
+              sortIndex: 0,
+              isChecked: true,
+            ),
+          ],
         );
-        when(() => mockRepository.getAllChecklists()).thenAnswer((_) async => [checklist]);
-        when(() => mockRepository.saveChecklist(any())).thenThrow(Exception('Reset failed'));
+        when(
+          () => mockRepository.getAllChecklists(),
+        ).thenAnswer((_) async => [checklist]);
+        when(
+          () => mockRepository.saveChecklist(any()),
+        ).thenThrow(Exception('Reset failed'));
 
         await viewModel.loadChecklists();
         await viewModel.resetChecklist('1');
@@ -421,6 +453,69 @@ void main() {
         var notified = 0;
         viewModel.addListener(() => notified++);
         viewModel.clearError();
+
+        expect(notified, 0);
+      });
+    });
+
+    group('updateChecklistInList', () {
+      test('updates checklist in list and notifies', () async {
+        final checklist1 = Checklist(
+          id: '1',
+          name: 'A',
+          createdAt: DateTime(2024),
+        );
+        final checklist2 = Checklist(
+          id: '2',
+          name: 'B',
+          createdAt: DateTime(2024, 2),
+        );
+        when(
+          () => mockRepository.getAllChecklists(),
+        ).thenAnswer((_) async => [checklist1, checklist2]);
+        await viewModel.loadChecklists();
+
+        final updated = checklist1.copyWith(
+          name: 'A Updated',
+          items: [
+            ChecklistItem(
+              id: 'i1',
+              title: 'Item 1',
+              isChecked: true,
+              sortIndex: 0,
+            ),
+          ],
+        );
+
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+        viewModel.updateChecklistInList(updated);
+
+        expect(notified, 1);
+        expect(
+          viewModel.checklists.firstWhere((c) => c.id == '1').name,
+          'A Updated',
+        );
+        expect(
+          viewModel.checklists.firstWhere((c) => c.id == '1').checkedCount,
+          1,
+        );
+      });
+
+      test('is a no-op when checklist id not found', () async {
+        final checklists = [
+          Checklist(id: '1', name: 'A', createdAt: DateTime(2024)),
+        ];
+        when(
+          () => mockRepository.getAllChecklists(),
+        ).thenAnswer((_) async => checklists);
+        await viewModel.loadChecklists();
+
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+        viewModel.updateChecklistInList(
+          Checklist(id: '99', name: 'X', createdAt: DateTime(2024)),
+        );
 
         expect(notified, 0);
       });

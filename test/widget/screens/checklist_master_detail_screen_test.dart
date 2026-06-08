@@ -17,7 +17,10 @@ class MockChecklistListViewModel extends Mock
 
 class FakeChecklist extends Fake implements Checklist {}
 
-Widget buildWideApp(ChecklistListViewModel listVm, {ChecklistRepository? repo}) {
+Widget buildWideApp(
+  ChecklistListViewModel listVm, {
+  ChecklistRepository? repo,
+}) {
   return MultiProvider(
     providers: [
       Provider<ChecklistRepository>.value(
@@ -65,8 +68,9 @@ void main() {
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
-    testWidgets('FAB opens new checklist dialog on wide layout',
-        (tester) async {
+    testWidgets('FAB opens new checklist dialog on wide layout', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildWideApp(mockListVm));
       await tester.pumpAndSettle();
 
@@ -77,35 +81,39 @@ void main() {
     });
 
     testWidgets(
-        'creating checklist via dialog calls createChecklist on wide layout',
-        (tester) async {
-      when(() => mockListVm.createChecklist(any())).thenAnswer((_) async {});
+      'creating checklist via dialog calls createChecklist on wide layout',
+      (tester) async {
+        when(() => mockListVm.createChecklist(any())).thenAnswer((_) async {});
 
-      await tester.pumpWidget(buildWideApp(mockListVm));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildWideApp(mockListVm));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'New List');
-      await tester.pump();
-      await tester.tap(find.text(AppStrings.create));
-      await tester.pumpAndSettle();
+        await tester.enterText(find.byType(TextField), 'New List');
+        await tester.pump();
+        await tester.tap(find.text(AppStrings.create));
+        await tester.pumpAndSettle();
 
-      verify(() => mockListVm.createChecklist('New List')).called(1);
-    });
+        verify(() => mockListVm.createChecklist('New List')).called(1);
+      },
+    );
 
-    testWidgets('shows settings icon on wide layout when not in selection',
-        (tester) async {
+    testWidgets('shows settings icon on wide layout when not in selection', (
+      tester,
+    ) async {
       when(() => mockListVm.checklists).thenReturn([]);
 
       await tester.pumpWidget(
         MultiProvider(
           providers: [
             Provider<ChecklistRepository>(
-                create: (_) => MockChecklistRepository()),
+              create: (_) => MockChecklistRepository(),
+            ),
             ChangeNotifierProvider<ChecklistListViewModel>.value(
-                value: mockListVm),
+              value: mockListVm,
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
@@ -115,8 +123,7 @@ void main() {
               child: ChecklistMasterDetailScreen(),
             ),
             routes: {
-              '/settings': (_) =>
-                  const Scaffold(body: Text('SETTINGS_PAGE')),
+              '/settings': (_) => const Scaffold(body: Text('SETTINGS_PAGE')),
             },
           ),
         ),
@@ -126,17 +133,20 @@ void main() {
       expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
     });
 
-    testWidgets('settings icon navigates to /settings on wide layout',
-        (tester) async {
+    testWidgets('settings icon navigates to /settings on wide layout', (
+      tester,
+    ) async {
       when(() => mockListVm.checklists).thenReturn([]);
 
       await tester.pumpWidget(
         MultiProvider(
           providers: [
             Provider<ChecklistRepository>(
-                create: (_) => MockChecklistRepository()),
+              create: (_) => MockChecklistRepository(),
+            ),
             ChangeNotifierProvider<ChecklistListViewModel>.value(
-                value: mockListVm),
+              value: mockListVm,
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
@@ -146,8 +156,7 @@ void main() {
               child: ChecklistMasterDetailScreen(),
             ),
             routes: {
-              '/settings': (_) =>
-                  const Scaffold(body: Text('SETTINGS_PAGE')),
+              '/settings': (_) => const Scaffold(body: Text('SETTINGS_PAGE')),
             },
           ),
         ),
@@ -160,8 +169,9 @@ void main() {
       expect(find.text('SETTINGS_PAGE'), findsOneWidget);
     });
 
-    testWidgets('long press enters selection mode on wide layout',
-        (tester) async {
+    testWidgets('long press enters selection mode on wide layout', (
+      tester,
+    ) async {
       when(() => mockListVm.checklists).thenReturn([
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
       ]);
@@ -177,8 +187,9 @@ void main() {
       expect(find.byIcon(Icons.restart_alt), findsOneWidget);
     });
 
-    testWidgets('close button exits selection mode on wide layout',
-        (tester) async {
+    testWidgets('close button exits selection mode on wide layout', (
+      tester,
+    ) async {
       when(() => mockListVm.checklists).thenReturn([
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
       ]);
@@ -195,8 +206,9 @@ void main() {
       expect(find.text(AppStrings.appTitle), findsOneWidget);
     });
 
-    testWidgets('FAB hidden during selection mode on wide layout',
-        (tester) async {
+    testWidgets('FAB hidden during selection mode on wide layout', (
+      tester,
+    ) async {
       when(() => mockListVm.checklists).thenReturn([
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
       ]);
@@ -235,8 +247,7 @@ void main() {
         name: 'Groceries',
         createdAt: DateTime(2024),
         items: [
-          ChecklistItem(
-              id: 'a', title: 'Milk', sortIndex: 0, isChecked: true),
+          ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0, isChecked: true),
         ],
       );
       when(() => mockListVm.checklists).thenReturn([checklist]);
@@ -263,8 +274,7 @@ void main() {
         items: [ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0)],
       );
       when(() => mockListVm.checklists).thenReturn([checklist]);
-      when(() => repo.getChecklistById('1'))
-          .thenAnswer((_) async => checklist);
+      when(() => repo.getChecklistById('1')).thenAnswer((_) async => checklist);
 
       await tester.pumpWidget(buildWideApp(mockListVm, repo: repo));
       await tester.pumpAndSettle();
@@ -273,9 +283,9 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets(
-        'tapping already-selected checklist deselects in checkbox',
-        (tester) async {
+    testWidgets('tapping already-selected checklist deselects in checkbox', (
+      tester,
+    ) async {
       when(() => mockListVm.checklists).thenReturn([
         Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
       ]);
@@ -294,60 +304,63 @@ void main() {
     });
 
     testWidgets(
-        'back gesture during selection mode clears selection on wide layout',
-        (tester) async {
-      when(() => mockListVm.checklists).thenReturn([
-        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
-      ]);
+      'back gesture during selection mode clears selection on wide layout',
+      (tester) async {
+        when(() => mockListVm.checklists).thenReturn([
+          Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+        ]);
 
-      await tester.pumpWidget(buildWideApp(mockListVm));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildWideApp(mockListVm));
+        await tester.pumpAndSettle();
 
-      await tester.longPress(find.text('Groceries'));
-      await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.close), findsOneWidget);
+        await tester.longPress(find.text('Groceries'));
+        await tester.pumpAndSettle();
+        expect(find.byIcon(Icons.close), findsOneWidget);
 
-      final navigator =
-          tester.state<NavigatorState>(find.byType(Navigator));
-      await navigator.maybePop();
-      await tester.pumpAndSettle();
+        final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+        await navigator.maybePop();
+        await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.appTitle), findsOneWidget);
-    });
+        expect(find.text(AppStrings.appTitle), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'back gesture when checklist selected deselects on wide layout',
-        (tester) async {
+      'back gesture when checklist selected deselects on wide layout',
+      (tester) async {
+        final repo = MockChecklistRepository();
+        final checklist = Checklist(
+          id: '1',
+          name: 'Groceries',
+          createdAt: DateTime(2024),
+        );
+        when(() => mockListVm.checklists).thenReturn([checklist]);
+        when(
+          () => repo.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+
+        await tester.pumpWidget(buildWideApp(mockListVm, repo: repo));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Groceries'));
+        await tester.pumpAndSettle();
+
+        final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+        await navigator.maybePop();
+        await tester.pumpAndSettle();
+
+        expect(find.text(AppStrings.selectChecklist), findsOneWidget);
+      },
+    );
+
+    testWidgets('selecting another checklist switches detail', (tester) async {
       final repo = MockChecklistRepository();
-      final checklist = Checklist(
+      final a = Checklist(
         id: '1',
         name: 'Groceries',
         createdAt: DateTime(2024),
       );
-      when(() => mockListVm.checklists).thenReturn([checklist]);
-      when(() => repo.getChecklistById('1'))
-          .thenAnswer((_) async => checklist);
-
-      await tester.pumpWidget(buildWideApp(mockListVm, repo: repo));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Groceries'));
-      await tester.pumpAndSettle();
-
-      final navigator =
-          tester.state<NavigatorState>(find.byType(Navigator));
-      await navigator.maybePop();
-      await tester.pumpAndSettle();
-
-      expect(find.text(AppStrings.selectChecklist), findsOneWidget);
-    });
-
-    testWidgets('selecting another checklist switches detail', (tester) async {
-      final repo = MockChecklistRepository();
-      final a =
-          Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024));
-      final b =
-          Checklist(id: '2', name: 'Travel', createdAt: DateTime(2024));
+      final b = Checklist(id: '2', name: 'Travel', createdAt: DateTime(2024));
       when(() => mockListVm.checklists).thenReturn([a, b]);
       when(() => repo.getChecklistById('1')).thenAnswer((_) async => a);
       when(() => repo.getChecklistById('2')).thenAnswer((_) async => b);
@@ -360,6 +373,163 @@ void main() {
 
       await tester.tap(find.text('Travel'));
       await tester.pumpAndSettle();
+    });
+  });
+
+  group('ChecklistMasterDetailScreen checked count sync', () {
+    testWidgets(
+      'toggling an item in detail panel updates checked count in list',
+      (tester) async {
+        final repo = MockChecklistRepository();
+        final checklist = Checklist(
+          id: '1',
+          name: 'Groceries',
+          createdAt: DateTime(2024),
+          items: [
+            ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+            ChecklistItem(id: 'b', title: 'Bread', sortIndex: 1),
+          ],
+        );
+        when(repo.getAllChecklists).thenAnswer((_) async => [checklist]);
+        when(() => repo.saveChecklist(any())).thenAnswer((_) async {});
+        when(
+          () => repo.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+
+        final listVm = ChecklistListViewModel(repo);
+        await listVm.loadChecklists();
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<ChecklistRepository>.value(value: repo),
+              ChangeNotifierProvider<ChecklistListViewModel>.value(
+                value: listVm,
+              ),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.lightTheme,
+              home: const SizedBox(
+                width: 1000,
+                height: 800,
+                child: ChecklistMasterDetailScreen(),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('0 / 2 checked'), findsOneWidget);
+
+        await tester.tap(find.text('Groceries'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Milk'), findsOneWidget);
+
+        final checkboxes = find.byType(Checkbox);
+        await tester.tap(checkboxes.first);
+        await tester.pumpAndSettle();
+
+        expect(find.text('1 / 2 checked'), findsOneWidget);
+      },
+    );
+
+    testWidgets('checking all items shows full count in list tile', (
+      tester,
+    ) async {
+      final repo = MockChecklistRepository();
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+        items: [
+          ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+          ChecklistItem(id: 'b', title: 'Bread', sortIndex: 1),
+        ],
+      );
+      when(repo.getAllChecklists).thenAnswer((_) async => [checklist]);
+      when(() => repo.saveChecklist(any())).thenAnswer((_) async {});
+      when(() => repo.getChecklistById('1')).thenAnswer((_) async => checklist);
+
+      final listVm = ChecklistListViewModel(repo);
+      await listVm.loadChecklists();
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ChecklistRepository>.value(value: repo),
+            ChangeNotifierProvider<ChecklistListViewModel>.value(value: listVm),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const SizedBox(
+              width: 1000,
+              height: 800,
+              child: ChecklistMasterDetailScreen(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('0 / 2 checked'), findsOneWidget);
+
+      await tester.tap(find.text('Groceries'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.done_all));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 / 2 checked'), findsOneWidget);
+    });
+
+    testWidgets('unchecking all items resets count in list tile', (
+      tester,
+    ) async {
+      final repo = MockChecklistRepository();
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+        items: [
+          ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0, isChecked: true),
+          ChecklistItem(id: 'b', title: 'Bread', sortIndex: 1, isChecked: true),
+        ],
+      );
+      when(repo.getAllChecklists).thenAnswer((_) async => [checklist]);
+      when(() => repo.saveChecklist(any())).thenAnswer((_) async {});
+      when(() => repo.getChecklistById('1')).thenAnswer((_) async => checklist);
+
+      final listVm = ChecklistListViewModel(repo);
+      await listVm.loadChecklists();
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ChecklistRepository>.value(value: repo),
+            ChangeNotifierProvider<ChecklistListViewModel>.value(value: listVm),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const SizedBox(
+              width: 1000,
+              height: 800,
+              child: ChecklistMasterDetailScreen(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 / 2 checked'), findsOneWidget);
+
+      await tester.tap(find.text('Groceries'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.remove_done));
+      await tester.pumpAndSettle();
+
+      expect(find.text('0 / 2 checked'), findsOneWidget);
     });
   });
 }

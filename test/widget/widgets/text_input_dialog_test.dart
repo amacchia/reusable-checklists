@@ -64,8 +64,10 @@ void main() {
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
 
-      expect(tester.widget<TextField>(find.byType(TextField)).controller?.text,
-          'Existing');
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller?.text,
+        'Existing',
+      );
     });
 
     testWidgets('cancel dismisses dialog', (tester) async {
