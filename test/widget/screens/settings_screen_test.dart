@@ -40,11 +40,9 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(ThemeMode.system);
-    registerFallbackValue(Checklist(
-      id: 'fallback',
-      name: 'fallback',
-      createdAt: DateTime(2024),
-    ));
+    registerFallbackValue(
+      Checklist(id: 'fallback', name: 'fallback', createdAt: DateTime(2024)),
+    );
   });
 
   setUp(() {
@@ -122,11 +120,11 @@ void main() {
       final invocations = <MethodCall>[];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-        invocations.add(call);
-        if (call.method == 'canLaunch') return true;
-        if (call.method == 'launch') return true;
-        return null;
-      });
+            invocations.add(call);
+            if (call.method == 'canLaunch') return true;
+            if (call.method == 'launch') return true;
+            return null;
+          });
       addTearDown(() {
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(channel, null);
@@ -155,17 +153,17 @@ void main() {
         clipboardValue = null;
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-          clipboardCalls.add(call);
-          if (call.method == 'Clipboard.setData') {
-            final args = call.arguments as Map;
-            clipboardValue = args['text'] as String?;
-          }
-          if (call.method == 'Clipboard.getData') {
-            if (clipboardValue == null) return null;
-            return {'text': clipboardValue};
-          }
-          return null;
-        });
+              clipboardCalls.add(call);
+              if (call.method == 'Clipboard.setData') {
+                final args = call.arguments as Map;
+                clipboardValue = args['text'] as String?;
+              }
+              if (call.method == 'Clipboard.getData') {
+                if (clipboardValue == null) return null;
+                return {'text': clipboardValue};
+              }
+              return null;
+            });
       });
 
       tearDown(() {
@@ -173,8 +171,9 @@ void main() {
             .setMockMethodCallHandler(SystemChannels.platform, null);
       });
 
-      testWidgets('export copies JSON to clipboard when checklists exist',
-          (tester) async {
+      testWidgets('export copies JSON to clipboard when checklists exist', (
+        tester,
+      ) async {
         final listVm = MockChecklistListViewModel();
         when(() => listVm.checklists).thenReturn([
           Checklist(id: '1', name: 'A', createdAt: DateTime(2024)),
@@ -189,8 +188,9 @@ void main() {
         expect(find.text(AppStrings.exportCopied), findsOneWidget);
       });
 
-      testWidgets('export shows "nothing to export" when empty',
-          (tester) async {
+      testWidgets('export shows "nothing to export" when empty', (
+        tester,
+      ) async {
         final listVm = MockChecklistListViewModel();
         when(() => listVm.checklists).thenReturn([]);
 
@@ -202,8 +202,9 @@ void main() {
         verifyNever(listVm.exportAsJson);
       });
 
-      testWidgets('import reads clipboard and calls importFromJson',
-          (tester) async {
+      testWidgets('import reads clipboard and calls importFromJson', (
+        tester,
+      ) async {
         clipboardValue = '{"version":1,"checklists":[]}';
         final listVm = MockChecklistListViewModel();
         when(() => listVm.checklists).thenReturn([]);
@@ -218,8 +219,9 @@ void main() {
         expect(find.text('2 checklist(s) imported'), findsOneWidget);
       });
 
-      testWidgets('import shows error snackbar when clipboard is empty',
-          (tester) async {
+      testWidgets('import shows error snackbar when clipboard is empty', (
+        tester,
+      ) async {
         clipboardValue = null;
         final listVm = MockChecklistListViewModel();
         when(() => listVm.checklists).thenReturn([]);
@@ -232,13 +234,15 @@ void main() {
         verifyNever(() => listVm.importFromJson(any()));
       });
 
-      testWidgets('import shows error snackbar when parsing fails',
-          (tester) async {
+      testWidgets('import shows error snackbar when parsing fails', (
+        tester,
+      ) async {
         clipboardValue = 'garbage';
         final listVm = MockChecklistListViewModel();
         when(() => listVm.checklists).thenReturn([]);
-        when(() => listVm.importFromJson(any()))
-            .thenThrow(const FormatException('bad json'));
+        when(
+          () => listVm.importFromJson(any()),
+        ).thenThrow(const FormatException('bad json'));
 
         await tester.pumpWidget(buildApp(themeVm, listVm: listVm));
         await tester.tap(find.text(AppStrings.importJson));
@@ -246,8 +250,9 @@ void main() {
         await tester.pump();
 
         expect(
-          find.textContaining(AppStrings.importFailed
-              .replaceFirst('{reason}', 'FormatException')),
+          find.textContaining(
+            AppStrings.importFailed.replaceFirst('{reason}', 'FormatException'),
+          ),
           findsOneWidget,
         );
       });

@@ -11,7 +11,9 @@ import '../widgets/empty_state_widget.dart';
 import '../widgets/new_checklist_dialog.dart';
 
 class ChecklistListScreen extends StatefulWidget {
-  const ChecklistListScreen({super.key});
+  final bool showSettingsAction;
+
+  const ChecklistListScreen({super.key, this.showSettingsAction = true});
 
   @override
   State<ChecklistListScreen> createState() => _ChecklistListScreenState();
@@ -53,8 +55,9 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
     if (error == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       vm.clearError();
     });
   }
@@ -163,8 +166,12 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
                       icon: const Icon(Icons.close),
                       onPressed: _clearSelection,
                     ),
-                    title: Text(AppStrings.nSelected
-                        .replaceFirst('{count}', '${_selectedIds.length}')),
+                    title: Text(
+                      AppStrings.nSelected.replaceFirst(
+                        '{count}',
+                        '${_selectedIds.length}',
+                      ),
+                    ),
                     actions: [
                       IconButton(
                         icon: const Icon(Icons.restart_alt),
@@ -181,14 +188,21 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
                 : AppBar(
                     title: const Text(AppStrings.appTitle),
                     actions: [
-                      IconButton(
-                        icon: const Icon(Icons.settings_outlined),
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/settings'),
-                      ),
+                      if (widget.showSettingsAction)
+                        IconButton(
+                          icon: const Icon(Icons.settings_outlined),
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/settings'),
+                        ),
                     ],
                   ),
-            body: _buildBody(vm),
+            body: ChecklistListBody(
+              vm: vm,
+              isSelectionMode: _isSelectionMode,
+              selectedIds: _selectedIds,
+              onToggleSelection: _toggleSelection,
+              onStartSelection: _startSelection,
+            ),
             floatingActionButton: _isSelectionMode
                 ? null
                 : FloatingActionButton(
@@ -201,7 +215,38 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
     );
   }
 
-  Widget _buildBody(ChecklistListViewModel vm) {
+  Future<void> _showNewChecklistDialog(BuildContext context) async {
+    final vm = context.read<ChecklistListViewModel>();
+    final name = await showAdaptiveDialog<String>(
+      context: context,
+      builder: (_) => const NewChecklistDialog(),
+    );
+    if (name != null) {
+      await vm.createChecklist(name);
+    }
+  }
+}
+
+class ChecklistListBody extends StatelessWidget {
+  final ChecklistListViewModel vm;
+  final bool isSelectionMode;
+  final Set<String> selectedIds;
+  final ValueChanged<String> onToggleSelection;
+  final ValueChanged<String> onStartSelection;
+  final ValueChanged<String>? onChecklistTap;
+
+  const ChecklistListBody({
+    super.key,
+    required this.vm,
+    required this.isSelectionMode,
+    required this.selectedIds,
+    required this.onToggleSelection,
+    required this.onStartSelection,
+    this.onChecklistTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     if (vm.isLoading) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
@@ -223,28 +268,26 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
           key: ValueKey(checklist.id),
           checklist: checklist,
           reorderIndex: index,
-          isSelectionMode: _isSelectionMode,
-          isSelected: _selectedIds.contains(checklist.id),
+          isSelectionMode: isSelectionMode,
+          isSelected: selectedIds.contains(checklist.id),
           onTap: () {
-            unawaited(
-              Navigator.pushNamed(context, '/detail', arguments: checklist.id),
-            );
+            final customTap = onChecklistTap;
+            if (customTap != null) {
+              customTap(checklist.id);
+            } else {
+              unawaited(
+                Navigator.pushNamed(
+                  context,
+                  '/detail',
+                  arguments: checklist.id,
+                ),
+              );
+            }
           },
-          onLongPress: () => _startSelection(checklist.id),
-          onSelectionTap: () => _toggleSelection(checklist.id),
+          onLongPress: () => onStartSelection(checklist.id),
+          onSelectionTap: () => onToggleSelection(checklist.id),
         );
       },
     );
-  }
-
-  Future<void> _showNewChecklistDialog(BuildContext context) async {
-    final vm = context.read<ChecklistListViewModel>();
-    final name = await showAdaptiveDialog<String>(
-      context: context,
-      builder: (_) => const NewChecklistDialog(),
-    );
-    if (name != null) {
-      await vm.createChecklist(name);
-    }
   }
 }

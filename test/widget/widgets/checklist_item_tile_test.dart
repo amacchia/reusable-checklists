@@ -5,10 +5,12 @@ import 'package:reusable_checklists/views/widgets/checklist_item_tile.dart';
 
 void main() {
   group('ChecklistItemTile', () {
-    Widget buildTile(ChecklistItem item,
-        {VoidCallback? onToggle,
-        VoidCallback? onEdit,
-        VoidCallback? onDelete}) {
+    Widget buildTile(
+      ChecklistItem item, {
+      VoidCallback? onToggle,
+      VoidCallback? onEdit,
+      VoidCallback? onDelete,
+    }) {
       return MaterialApp(
         home: Scaffold(
           body: ReorderableListView(
@@ -44,7 +46,11 @@ void main() {
 
     testWidgets('shows checkbox checked when checked', (tester) async {
       final item = ChecklistItem(
-          id: '1', title: 'Test', sortIndex: 0, isChecked: true);
+        id: '1',
+        title: 'Test',
+        sortIndex: 0,
+        isChecked: true,
+      );
       await tester.pumpWidget(buildTile(item));
 
       final checkbox = tester.widget<Checkbox>(find.byType(Checkbox));
@@ -53,7 +59,11 @@ void main() {
 
     testWidgets('applies strikethrough when checked', (tester) async {
       final item = ChecklistItem(
-          id: '1', title: 'Test', sortIndex: 0, isChecked: true);
+        id: '1',
+        title: 'Test',
+        sortIndex: 0,
+        isChecked: true,
+      );
       await tester.pumpWidget(buildTile(item));
 
       final text = tester.widget<Text>(find.text('Test'));

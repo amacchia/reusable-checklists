@@ -4,12 +4,14 @@ class EmptyStateWidget extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
+  final double iconSize;
 
   const EmptyStateWidget({
     super.key,
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.iconSize = 64,
   });
 
   @override
@@ -19,20 +21,20 @@ class EmptyStateWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 64, color: colorScheme.outline),
+          Icon(icon, size: iconSize, color: colorScheme.outline),
           const SizedBox(height: 16),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+              color: colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.outline,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
           ),
         ],
       ),

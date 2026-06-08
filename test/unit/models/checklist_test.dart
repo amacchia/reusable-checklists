@@ -14,9 +14,7 @@ void main() {
     });
 
     test('creates with provided items', () {
-      final items = [
-        ChecklistItem(id: 'a', title: 'Item 1', sortIndex: 0),
-      ];
+      final items = [ChecklistItem(id: 'a', title: 'Item 1', sortIndex: 0)];
       final checklist = Checklist(
         id: '1',
         name: 'Test',
@@ -108,9 +106,7 @@ void main() {
           id: '1',
           name: 'Original',
           createdAt: DateTime(2024),
-          items: [
-            ChecklistItem(id: 'a', title: 'A', sortIndex: 0),
-          ],
+          items: [ChecklistItem(id: 'a', title: 'A', sortIndex: 0)],
         );
       });
 

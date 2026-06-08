@@ -150,8 +150,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify all unchecked
-      final uncheckedBoxes =
-          tester.widgetList<Checkbox>(find.byType(Checkbox));
+      final uncheckedBoxes = tester.widgetList<Checkbox>(find.byType(Checkbox));
       for (final cb in uncheckedBoxes) {
         expect(cb.value, false);
       }

@@ -24,7 +24,7 @@ void main() {
 
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
-      final textField = tester.widget<TextField>(find.byType(TextField)); 
+      final textField = tester.widget<TextField>(find.byType(TextField));
 
       expect(find.text(AppStrings.newChecklist), findsOneWidget);
       expect(find.text(AppStrings.cancel), findsOneWidget);

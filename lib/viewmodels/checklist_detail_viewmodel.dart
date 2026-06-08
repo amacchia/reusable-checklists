@@ -10,7 +10,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
   final Uuid _uuid;
 
   ChecklistDetailViewModel(this._repository, {Uuid? uuid})
-      : _uuid = uuid ?? const Uuid();
+    : _uuid = uuid ?? const Uuid();
 
   Checklist? _checklist;
   String? _errorMessage;

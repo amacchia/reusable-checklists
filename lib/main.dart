@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/constants/app_theme.dart';
-import 'core/navigation/route_observer.dart';
 import 'data/models/checklist.dart';
 import 'data/repositories/checklist_repository.dart';
 import 'data/repositories/hive_checklist_repository.dart';
@@ -16,8 +15,8 @@ import 'hive_registrar.g.dart';
 import 'viewmodels/checklist_detail_viewmodel.dart';
 import 'viewmodels/checklist_list_viewmodel.dart';
 import 'viewmodels/theme_viewmodel.dart';
+import 'views/screens/adaptive_layout_shell.dart';
 import 'views/screens/checklist_detail_screen.dart';
-import 'views/screens/checklist_list_screen.dart';
 import 'views/screens/settings_screen.dart';
 
 Future<void> main() async {
@@ -66,14 +65,9 @@ class MainApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeVm.themeMode,
-            navigatorObservers: [routeObserver],
-            initialRoute: '/',
+            home: const AdaptiveLayoutShell(),
             onGenerateRoute: (settings) {
               switch (settings.name) {
-                case '/':
-                  return MaterialPageRoute(
-                    builder: (_) => const ChecklistListScreen(),
-                  );
                 case '/detail':
                   final checklistId = settings.arguments;
                   if (checklistId is! String) return null;
