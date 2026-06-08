@@ -8,17 +8,24 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_strings.dart';
 import '../../viewmodels/checklist_list_viewmodel.dart';
 import '../../viewmodels/theme_viewmodel.dart';
+import '../widgets/constrained_scaffold_body.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+  final bool showAppBar;
+
+  const SettingsScreen({super.key, this.showAppBar = true});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.settings),
-      ),
-      body: ListView(
+      appBar: showAppBar
+          ? AppBar(
+              title: const Text(AppStrings.settings),
+            )
+          : null,
+      body: ConstrainedScaffoldBody(
+        maxWidth: 500,
+        child: ListView(
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
@@ -97,6 +104,7 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
         ],
+      ),
       ),
     );
   }

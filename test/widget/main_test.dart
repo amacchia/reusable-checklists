@@ -7,6 +7,7 @@ import 'package:reusable_checklists/core/constants/app_strings.dart';
 import 'package:reusable_checklists/data/models/checklist.dart';
 import 'package:reusable_checklists/hive_registrar.g.dart';
 import 'package:reusable_checklists/main.dart' as app;
+import 'package:reusable_checklists/views/screens/adaptive_layout_shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -35,7 +36,14 @@ void main() {
     }
   });
 
-  testWidgets('MainApp renders list screen', (tester) async {
+  testWidgets('MainApp renders list screen on compact', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(app.MainApp(prefs: prefs));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -43,7 +51,23 @@ void main() {
     expect(find.text(AppStrings.appTitle), findsOneWidget);
   });
 
-  testWidgets('MainApp navigates to /settings', (tester) async {
+  testWidgets('MainApp renders adaptive layout shell', (tester) async {
+    await tester.pumpWidget(app.MainApp(prefs: prefs));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.byType(AdaptiveLayoutShell), findsOneWidget);
+  });
+
+  testWidgets('MainApp navigates to /settings via push on compact',
+      (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
     await tester.pumpWidget(app.MainApp(prefs: prefs));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));

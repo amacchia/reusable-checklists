@@ -41,4 +41,7 @@ class AppStrings {
   static const clipboardEmpty = 'Clipboard is empty';
   static const importSucceeded = '{count} checklist(s) imported';
   static const importFailed = 'Import failed: {reason}';
+  static const selectChecklist = 'Select a checklist';
+  static const selectChecklistSubtitle = 'Choose a checklist from the list';
+  static const checklists = 'Checklists';
 }

@@ -22,7 +22,9 @@ class _NewChecklistDialogState extends State<NewChecklistDialog> {
   Widget build(BuildContext context) {
     return AlertDialog.adaptive(
       title: const Text(AppStrings.newChecklist),
-      content: TextField(
+      content: SizedBox(
+        width: 400,
+        child: TextField(
         controller: _controller,
         autofocus: true,
         decoration: const InputDecoration(
@@ -31,6 +33,7 @@ class _NewChecklistDialogState extends State<NewChecklistDialog> {
         textCapitalization: TextCapitalization.words,
         onChanged: (_) => setState(() {}),
         onSubmitted: (_) => _submit(),
+      ),
       ),
       actions: [
         TextButton(

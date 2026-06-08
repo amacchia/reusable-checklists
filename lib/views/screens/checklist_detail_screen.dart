@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../core/utils/responsive_utils.dart';
 import '../../data/models/checklist_item.dart';
 import '../../viewmodels/checklist_detail_viewmodel.dart';
 import '../widgets/checklist_item_tile.dart';
+import '../widgets/constrained_scaffold_body.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/text_input_dialog.dart';
 
@@ -53,14 +55,15 @@ class _ChecklistDetailScreenState extends State<ChecklistDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      appBar: _ChecklistAppBar(),
-      body: _ChecklistBody(),
+      appBar: ChecklistDetailAppBar(),
+      body: ChecklistDetailBody(constrainWidth: true),
     );
   }
 }
 
-class _ChecklistAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _ChecklistAppBar();
+class ChecklistDetailAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  const ChecklistDetailAppBar({super.key});
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -129,8 +132,10 @@ class _ChecklistAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-class _ChecklistBody extends StatelessWidget {
-  const _ChecklistBody();
+class ChecklistDetailBody extends StatelessWidget {
+  final bool constrainWidth;
+
+  const ChecklistDetailBody({super.key, this.constrainWidth = false});
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +143,7 @@ class _ChecklistBody extends StatelessWidget {
     if (vm.checklist == null) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
-    return Column(
+    final content = Column(
       children: [
         Expanded(
           child: vm.sortedItems.isEmpty
@@ -149,9 +154,13 @@ class _ChecklistBody extends StatelessWidget {
                 )
               : const _ItemLists(),
         ),
-        const _AddItemBar(),
+        const AddItemBar(),
       ],
     );
+    if (constrainWidth && ResponsiveUtils.isExpanded(context)) {
+      return ConstrainedScaffoldBody(maxWidth: 600, child: content);
+    }
+    return content;
   }
 }
 
@@ -253,14 +262,14 @@ class _ItemLists extends StatelessWidget {
   }
 }
 
-class _AddItemBar extends StatefulWidget {
-  const _AddItemBar();
+class AddItemBar extends StatefulWidget {
+  const AddItemBar({super.key});
 
   @override
-  State<_AddItemBar> createState() => _AddItemBarState();
+  State<AddItemBar> createState() => _AddItemBarState();
 }
 
-class _AddItemBarState extends State<_AddItemBar> {
+class _AddItemBarState extends State<AddItemBar> {
   final _controller = TextEditingController();
 
   @override

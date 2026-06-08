@@ -45,13 +45,16 @@ class _TextInputDialogState extends State<TextInputDialog> {
   Widget build(BuildContext context) {
     return AlertDialog.adaptive(
       title: Text(widget.title),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        decoration: InputDecoration(hintText: widget.hint),
-        textCapitalization: widget.textCapitalization,
-        onChanged: (_) => setState(() {}),
-        onSubmitted: (_) => _submit(),
+      content: SizedBox(
+        width: 400,
+        child: TextField(
+          controller: _controller,
+          autofocus: true,
+          decoration: InputDecoration(hintText: widget.hint),
+          textCapitalization: widget.textCapitalization,
+          onChanged: (_) => setState(() {}),
+          onSubmitted: (_) => _submit(),
+        ),
       ),
       actions: [
         TextButton(
