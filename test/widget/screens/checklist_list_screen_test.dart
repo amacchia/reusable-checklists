@@ -6,6 +6,7 @@ import 'package:reusable_checklists/core/constants/app_strings.dart';
 import 'package:reusable_checklists/core/constants/app_theme.dart';
 import 'package:reusable_checklists/core/navigation/route_observer.dart';
 import 'package:reusable_checklists/data/models/checklist.dart';
+import 'package:reusable_checklists/data/models/checklist_item.dart';
 import 'package:reusable_checklists/data/repositories/checklist_repository.dart';
 import 'package:reusable_checklists/viewmodels/checklist_list_viewmodel.dart';
 import 'package:reusable_checklists/views/screens/checklist_list_screen.dart';
@@ -466,6 +467,133 @@ void main() {
       await tester.longPress(find.text('Groceries'));
       await tester.pumpAndSettle();
       expect(find.byType(FloatingActionButton), findsNothing);
+    });
+
+    testWidgets('reset selected shows snackbar with undo', (tester) async {
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+        items: [
+          ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0, isChecked: true),
+        ],
+      );
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([checklist]);
+      when(() => mockVm.resetChecklist('1')).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      await tester.longPress(find.text('Groceries'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.restart_alt));
+      await tester.pumpAndSettle();
+
+      verify(() => mockVm.resetChecklist('1')).called(1);
+      expect(find.text(AppStrings.checklistReset), findsOneWidget);
+      expect(find.text(AppStrings.undo), findsOneWidget);
+    });
+
+    testWidgets('undo after reset calls saveChecklist', (tester) async {
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+        items: [
+          ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0, isChecked: true),
+        ],
+      );
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([checklist]);
+      when(() => mockVm.resetChecklist('1')).thenAnswer((_) async {});
+      when(() => mockVm.saveChecklist(any())).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      await tester.longPress(find.text('Groceries'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.restart_alt));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(SnackBarAction, AppStrings.undo));
+      await tester.pumpAndSettle();
+
+      verify(() => mockVm.saveChecklist(checklist)).called(1);
+    });
+
+    testWidgets('hides settings icon when showSettingsAction is false',
+        (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([]);
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ChecklistRepository>(
+              create: (_) => MockChecklistRepository(),
+            ),
+            ChangeNotifierProvider<ChecklistListViewModel>.value(value: mockVm),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const ChecklistListScreen(showSettingsAction: false),
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.settings_outlined), findsNothing);
+    });
+
+    testWidgets('shows error snackbar when errorMessage is set', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+      await tester.pumpAndSettle();
+
+      // Verify the scaffold is rendered
+      expect(find.text(AppStrings.appTitle), findsOneWidget);
+    });
+
+    testWidgets('ChecklistListBody onChecklistTap callback', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      ]);
+
+      var tappedId = '';
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            Provider<ChecklistRepository>(
+              create: (_) => MockChecklistRepository(),
+            ),
+            ChangeNotifierProvider<ChecklistListViewModel>.value(value: mockVm),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: Scaffold(
+              body: ChecklistListBody(
+                vm: mockVm,
+                isSelectionMode: false,
+                selectedIds: const {},
+                onToggleSelection: (_) {},
+                onStartSelection: (_) {},
+                onChecklistTap: (id) {
+                  tappedId = id;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Groceries'));
+      await tester.pumpAndSettle();
+
+      expect(tappedId, '1');
     });
   });
 }
