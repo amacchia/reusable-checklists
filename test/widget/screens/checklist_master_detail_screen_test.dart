@@ -100,7 +100,7 @@ void main() {
       },
     );
 
-    testWidgets('shows settings icon on wide layout when not in selection', (
+    testWidgets('hides settings icon on wide layout in AppBar', (
       tester,
     ) async {
       when(() => mockListVm.checklists).thenReturn([]);
@@ -130,43 +130,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
-    });
-
-    testWidgets('settings icon navigates to /settings on wide layout', (
-      tester,
-    ) async {
-      when(() => mockListVm.checklists).thenReturn([]);
-
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            Provider<ChecklistRepository>(
-              create: (_) => MockChecklistRepository(),
-            ),
-            ChangeNotifierProvider<ChecklistListViewModel>.value(
-              value: mockListVm,
-            ),
-          ],
-          child: MaterialApp(
-            theme: AppTheme.lightTheme,
-            home: const SizedBox(
-              width: 1000,
-              height: 800,
-              child: ChecklistMasterDetailScreen(),
-            ),
-            routes: {
-              '/settings': (_) => const Scaffold(body: Text('SETTINGS_PAGE')),
-            },
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.settings_outlined));
-      await tester.pumpAndSettle();
-
-      expect(find.text('SETTINGS_PAGE'), findsOneWidget);
+      expect(find.byIcon(Icons.settings_outlined), findsNothing);
     });
 
     testWidgets('long press enters selection mode on wide layout', (

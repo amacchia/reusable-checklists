@@ -170,7 +170,6 @@ class _ChecklistMasterDetailScreenState
     return Consumer<ChecklistListViewModel>(
       builder: (context, listVm, _) {
         final splitRatio = ResponsiveUtils.isExpanded(context) ? 0.35 : 0.4;
-        final showSettings = !_isSelectionMode;
 
         return PopScope(
           canPop: _selectedChecklistId == null && !_isSelectionMode,
@@ -188,7 +187,7 @@ class _ChecklistMasterDetailScreenState
             children: [
               SizedBox(
                 width: MediaQuery.sizeOf(context).width * splitRatio,
-                child: _buildListPanel(listVm, showSettings),
+                child: _buildListPanel(listVm),
               ),
               Expanded(child: _buildDetailPanel()),
             ],
@@ -198,7 +197,7 @@ class _ChecklistMasterDetailScreenState
     );
   }
 
-  Widget _buildListPanel(ChecklistListViewModel listVm, bool showSettings) {
+  Widget _buildListPanel(ChecklistListViewModel listVm) {
     return Scaffold(
       appBar: _isSelectionMode
           ? AppBar(
@@ -233,16 +232,7 @@ class _ChecklistMasterDetailScreenState
                 ),
               ],
             )
-          : AppBar(
-              title: const Text(AppStrings.appTitle),
-              actions: [
-                if (showSettings)
-                  IconButton(
-                    icon: const Icon(Icons.settings_outlined),
-                    onPressed: () => Navigator.pushNamed(context, '/settings'),
-                  ),
-              ],
-            ),
+          : AppBar(title: const Text(AppStrings.appTitle)),
       body: ChecklistListBody(
         vm: listVm,
         isSelectionMode: _isSelectionMode,
