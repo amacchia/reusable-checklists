@@ -226,7 +226,7 @@ void main() {
     });
 
     group('createChecklist ordering', () {
-      test('new checklist lands at the top', () async {
+      test('new checklist lands at the bottom', () async {
         final a = Checklist(id: 'a', name: 'A', createdAt: DateTime(2024));
         when(
           () => mockRepository.getAllChecklists(),
@@ -238,7 +238,7 @@ void main() {
         await viewModel.loadChecklists();
         await viewModel.createChecklist('New');
 
-        expect(viewModel.checklists.first.name, 'New');
+        expect(viewModel.checklists.last.name, 'New');
       });
     });
 

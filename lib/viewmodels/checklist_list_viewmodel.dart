@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -58,19 +60,19 @@ class ChecklistListViewModel extends ChangeNotifier {
   Future<void> createChecklist(String name) async {
     _errorMessage = null;
     try {
-      final topSortIndex = _checklists.isEmpty
+      final bottomSortIndex = _checklists.isEmpty
           ? 0
-          : _checklists.map((c) => c.sortIndex).reduce(math.min) - 1;
+          : _checklists.map((c) => c.sortIndex).reduce(math.max) + 1;
       final now = DateTime.now().toUtc();
       final checklist = Checklist(
         id: _uuid.v4(),
         name: name,
         createdAt: now,
         updatedAt: now,
-        sortIndex: topSortIndex,
+        sortIndex: bottomSortIndex,
       );
       await _repository.saveChecklist(checklist);
-      _checklists = [checklist, ..._checklists];
+      _checklists = [..._checklists, checklist];
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
