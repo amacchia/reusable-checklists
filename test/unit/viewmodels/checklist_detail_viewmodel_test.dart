@@ -613,7 +613,7 @@ void main() {
         ).thenAnswer((_) async {});
 
         await viewModel.loadChecklist('1');
-        await viewModel.reorderItems(0, 3); // move A after C
+        await viewModel.reorderItems(0, 2); // move A after C
 
         final sorted = viewModel.sortedItems;
         expect(sorted.map((i) => i.title).toList(), [

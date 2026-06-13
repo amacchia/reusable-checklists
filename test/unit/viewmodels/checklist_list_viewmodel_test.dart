@@ -164,7 +164,7 @@ void main() {
         ).thenAnswer((_) async {});
 
         await viewModel.loadChecklists();
-        await viewModel.reorderChecklists(0, 3); // move A to the end
+        await viewModel.reorderChecklists(0, 2); // move A to the end
 
         expect(viewModel.checklists.map((c) => c.id).toList(), ['b', 'c', 'a']);
         expect(viewModel.checklists.map((c) => c.sortIndex).toList(), [
@@ -177,15 +177,21 @@ void main() {
 
       test('sets errorMessage on failure', () async {
         final a = Checklist(id: 'a', name: 'A', createdAt: DateTime(2024));
+        final b = Checklist(
+          id: 'b',
+          name: 'B',
+          createdAt: DateTime(2024, 2),
+          sortIndex: 1,
+        );
         when(
           () => mockRepository.getAllChecklists(),
-        ).thenAnswer((_) async => [a]);
+        ).thenAnswer((_) async => [a, b]);
         when(
           () => mockRepository.saveChecklist(any()),
         ).thenThrow(Exception('Reorder failed'));
 
         await viewModel.loadChecklists();
-        await viewModel.reorderChecklists(0, 1);
+        await viewModel.reorderChecklists(0, 0);
 
         expect(viewModel.errorMessage, contains('Reorder failed'));
       });
