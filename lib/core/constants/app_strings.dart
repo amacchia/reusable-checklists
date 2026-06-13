@@ -1,5 +1,6 @@
 class AppStrings {
   static const appTitle = 'My Checklists';
+  static const appName = 'Reusable Checklists';
   static const newChecklist = 'New Checklist';
   static const renameChecklist = 'Rename Checklist';
   static const editItem = 'Edit Item';
@@ -43,6 +44,8 @@ class AppStrings {
   static const importSucceeded = '{count} checklist(s) imported';
   static const importFailed = 'Import failed: {reason}';
   static const selectChecklist = 'Select a checklist';
+  static const select = 'Select';
   static const selectChecklistSubtitle = 'Choose a checklist from the list';
   static const checklists = 'Checklists';
+  static const appVersion = '1.0.0';
 }

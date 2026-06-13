@@ -14,6 +14,7 @@ import 'data/repositories/shared_prefs_settings_repository.dart';
 import 'hive_registrar.g.dart';
 import 'viewmodels/checklist_detail_viewmodel.dart';
 import 'viewmodels/checklist_list_viewmodel.dart';
+import 'viewmodels/selection_viewmodel.dart';
 import 'viewmodels/theme_viewmodel.dart';
 import 'views/screens/adaptive_layout_shell.dart';
 import 'views/screens/checklist_detail_screen.dart';
@@ -50,6 +51,9 @@ class MainApp extends StatelessWidget {
             unawaited(vm.loadChecklists());
             return vm;
           },
+        ),
+        ChangeNotifierProvider<SelectionNotifier>(
+          create: (_) => SelectionNotifier(),
         ),
         Provider<SettingsRepository>(
           create: (_) => SharedPrefsSettingsRepository(prefs),

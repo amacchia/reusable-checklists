@@ -9,6 +9,7 @@ import 'package:reusable_checklists/data/models/checklist.dart';
 import 'package:reusable_checklists/data/models/checklist_item.dart';
 import 'package:reusable_checklists/data/repositories/checklist_repository.dart';
 import 'package:reusable_checklists/viewmodels/checklist_list_viewmodel.dart';
+import 'package:reusable_checklists/viewmodels/selection_viewmodel.dart';
 import 'package:reusable_checklists/views/screens/checklist_list_screen.dart';
 
 class MockChecklistRepository extends Mock implements ChecklistRepository {}
@@ -21,6 +22,9 @@ Widget buildApp(ChecklistListViewModel vm) {
     providers: [
       Provider<ChecklistRepository>(create: (_) => MockChecklistRepository()),
       ChangeNotifierProvider<ChecklistListViewModel>.value(value: vm),
+      ChangeNotifierProvider<SelectionNotifier>(
+        create: (_) => SelectionNotifier(),
+      ),
     ],
     child: MaterialApp(
       theme: AppTheme.lightTheme,
@@ -141,6 +145,40 @@ void main() {
       expect(find.text('1 selected'), findsOneWidget);
       expect(find.byIcon(Icons.close), findsOneWidget);
       expect(find.byType(Checkbox), findsOneWidget);
+    });
+
+    testWidgets('select button enters selection mode with no items selected', (
+      tester,
+    ) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      await tester.tap(find.byIcon(Icons.select_all));
+      await tester.pump();
+
+      expect(find.byType(Checkbox), findsOneWidget);
+      expect(find.text('0 selected'), findsOneWidget);
+    });
+
+    testWidgets('select button then tap item selects it', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      await tester.tap(find.byIcon(Icons.select_all));
+      await tester.pump();
+
+      await tester.tap(find.text('Groceries'));
+      await tester.pump();
+
+      expect(find.text('1 selected'), findsOneWidget);
     });
 
     testWidgets('tapping tiles in selection mode toggles selection', (
@@ -312,6 +350,9 @@ void main() {
               create: (_) => MockChecklistRepository(),
             ),
             ChangeNotifierProvider<ChecklistListViewModel>.value(value: mockVm),
+            ChangeNotifierProvider<SelectionNotifier>(
+              create: (_) => SelectionNotifier(),
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
@@ -343,6 +384,9 @@ void main() {
               create: (_) => MockChecklistRepository(),
             ),
             ChangeNotifierProvider<ChecklistListViewModel>.value(value: mockVm),
+            ChangeNotifierProvider<SelectionNotifier>(
+              create: (_) => SelectionNotifier(),
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
@@ -376,6 +420,9 @@ void main() {
               create: (_) => MockChecklistRepository(),
             ),
             ChangeNotifierProvider<ChecklistListViewModel>.value(value: mockVm),
+            ChangeNotifierProvider<SelectionNotifier>(
+              create: (_) => SelectionNotifier(),
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
@@ -536,6 +583,9 @@ void main() {
               create: (_) => MockChecklistRepository(),
             ),
             ChangeNotifierProvider<ChecklistListViewModel>.value(value: mockVm),
+            ChangeNotifierProvider<SelectionNotifier>(
+              create: (_) => SelectionNotifier(),
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
@@ -567,6 +617,7 @@ void main() {
       ]);
 
       var tappedId = '';
+      final selection = SelectionNotifier();
       await tester.pumpWidget(
         MultiProvider(
           providers: [
@@ -574,16 +625,15 @@ void main() {
               create: (_) => MockChecklistRepository(),
             ),
             ChangeNotifierProvider<ChecklistListViewModel>.value(value: mockVm),
+            ChangeNotifierProvider<SelectionNotifier>.value(value: selection),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
             home: Scaffold(
               body: ChecklistListBody(
                 vm: mockVm,
-                isSelectionMode: false,
-                selectedIds: const {},
-                onToggleSelection: (_) {},
-                onStartSelection: (_) {},
+                selection: selection,
+                onStartSelection: selection.startSelection,
                 onChecklistTap: (id) {
                   tappedId = id;
                 },
@@ -597,6 +647,33 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tappedId, '1');
+    });
+
+    testWidgets('select button is visible in normal mode', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      // Find the select_all icon in the AppBar (not in the EmptyStateWidget)
+      final appBarIcons = find.byIcon(Icons.select_all);
+      expect(appBarIcons, findsOneWidget);
+    });
+
+    testWidgets('select button is hidden in selection mode', (tester) async {
+      when(() => mockVm.isLoading).thenReturn(false);
+      when(() => mockVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      expect(find.byIcon(Icons.select_all), findsOneWidget);
+
+      await tester.longPress(find.text('Groceries'));
+      await tester.pump();
+
+      expect(find.byIcon(Icons.select_all), findsNothing);
     });
   });
 }

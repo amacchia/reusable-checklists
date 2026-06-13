@@ -8,6 +8,7 @@ import '../../core/utils/responsive_utils.dart';
 import '../../data/repositories/checklist_repository.dart';
 import '../../viewmodels/checklist_detail_viewmodel.dart';
 import '../../viewmodels/checklist_list_viewmodel.dart';
+import '../../viewmodels/selection_viewmodel.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/new_checklist_dialog.dart';
 import 'checklist_detail_screen.dart';
@@ -24,9 +25,7 @@ class ChecklistMasterDetailScreen extends StatefulWidget {
 class _ChecklistMasterDetailScreenState
     extends State<ChecklistMasterDetailScreen> {
   String? _selectedChecklistId;
-  final Set<String> _selectedIds = {};
   ChecklistDetailViewModel? _detailVm;
-  bool _isSelectionMode = false;
 
   @override
   void dispose() {
@@ -70,44 +69,19 @@ class _ChecklistMasterDetailScreenState
     });
   }
 
-  void _startSelection(String id) {
-    setState(() {
-      _selectedIds.clear();
-      _selectedIds.add(id);
-      _isSelectionMode = true;
-    });
-  }
-
-  void _toggleSelection(String id) {
-    setState(() {
-      if (_selectedIds.contains(id)) {
-        _selectedIds.remove(id);
-      } else {
-        _selectedIds.add(id);
-      }
-      _isSelectionMode = _selectedIds.isNotEmpty;
-    });
-  }
-
-  void _clearSelection() {
-    setState(() {
-      _selectedIds.clear();
-      _isSelectionMode = false;
-    });
-  }
-
   void _resetSelected(
     BuildContext scaffoldContext,
     ChecklistListViewModel listVm,
   ) {
+    final selection = context.read<SelectionNotifier>();
     final originalChecklists = listVm.checklists
-        .where((c) => _selectedIds.contains(c.id))
+        .where((c) => selection.selectedIds.contains(c.id))
         .toList();
     final count = originalChecklists.length;
     for (final checklist in originalChecklists) {
       unawaited(listVm.resetChecklist(checklist.id));
     }
-    _clearSelection();
+    selection.clearSelection();
     final message = count == 1
         ? AppStrings.checklistReset
         : AppStrings.checklistsReset.replaceFirst('{count}', '$count');
@@ -130,17 +104,18 @@ class _ChecklistMasterDetailScreenState
     BuildContext scaffoldContext,
     ChecklistListViewModel listVm,
   ) {
+    final selection = context.read<SelectionNotifier>();
     final deletedChecklists = listVm.checklists
-        .where((c) => _selectedIds.contains(c.id))
+        .where((c) => selection.selectedIds.contains(c.id))
         .toList();
     final count = deletedChecklists.length;
     for (final checklist in deletedChecklists) {
       unawaited(listVm.deleteChecklist(checklist.id));
     }
-    if (_selectedIds.contains(_selectedChecklistId)) {
+    if (selection.selectedIds.contains(_selectedChecklistId)) {
       _deselectChecklist();
     }
-    _clearSelection();
+    selection.clearSelection();
     final message = count == 1
         ? AppStrings.checklistDeleted
         : AppStrings.checklistsDeleted.replaceFirst('{count}', '$count');
@@ -167,48 +142,56 @@ class _ChecklistMasterDetailScreenState
       return const ChecklistListScreen();
     }
 
-    return Consumer<ChecklistListViewModel>(
-      builder: (context, listVm, _) {
-        final splitRatio = ResponsiveUtils.isExpanded(context) ? 0.35 : 0.4;
+    return Consumer<SelectionNotifier>(
+      builder: (context, selection, _) {
+        return Consumer<ChecklistListViewModel>(
+          builder: (context, listVm, _) {
+            final splitRatio = ResponsiveUtils.isExpanded(context) ? 0.35 : 0.4;
 
-        return PopScope(
-          canPop: _selectedChecklistId == null && !_isSelectionMode,
-          onPopInvokedWithResult: (didPop, _) {
-            if (didPop) return;
-            if (_isSelectionMode) {
-              _clearSelection();
-              return;
-            }
-            if (_selectedChecklistId != null) {
-              _deselectChecklist();
-            }
-          },
-          child: Row(
-            children: [
-              SizedBox(
-                width: MediaQuery.sizeOf(context).width * splitRatio,
-                child: _buildListPanel(listVm),
+            return PopScope(
+              canPop:
+                  _selectedChecklistId == null && !selection.isSelectionMode,
+              onPopInvokedWithResult: (didPop, _) {
+                if (didPop) return;
+                if (selection.isSelectionMode) {
+                  selection.clearSelection();
+                  return;
+                }
+                if (_selectedChecklistId != null) {
+                  _deselectChecklist();
+                }
+              },
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.sizeOf(context).width * splitRatio,
+                    child: _buildListPanel(listVm, selection),
+                  ),
+                  Expanded(child: _buildDetailPanel()),
+                ],
               ),
-              Expanded(child: _buildDetailPanel()),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildListPanel(ChecklistListViewModel listVm) {
+  Widget _buildListPanel(
+    ChecklistListViewModel listVm,
+    SelectionNotifier selection,
+  ) {
     return Scaffold(
-      appBar: _isSelectionMode
+      appBar: selection.isSelectionMode
           ? AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.close),
-                onPressed: _clearSelection,
+                onPressed: selection.clearSelection,
               ),
               title: Text(
                 AppStrings.nSelected.replaceFirst(
                   '{count}',
-                  '${_selectedIds.length}',
+                  '${selection.selectedIds.length}',
                 ),
               ),
               actions: [
@@ -232,16 +215,23 @@ class _ChecklistMasterDetailScreenState
                 ),
               ],
             )
-          : AppBar(title: const Text(AppStrings.appTitle)),
+          : AppBar(
+              title: const Text(AppStrings.appTitle),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.select_all),
+                  tooltip: AppStrings.select,
+                  onPressed: selection.enterSelectionMode,
+                ),
+              ],
+            ),
       body: ChecklistListBody(
         vm: listVm,
-        isSelectionMode: _isSelectionMode,
-        selectedIds: _selectedIds,
-        onToggleSelection: _toggleSelection,
-        onStartSelection: _startSelection,
+        selection: selection,
+        onStartSelection: selection.startSelection,
         onChecklistTap: _selectChecklist,
       ),
-      floatingActionButton: _isSelectionMode
+      floatingActionButton: selection.isSelectionMode
           ? null
           : FloatingActionButton(
               onPressed: () => _showNewChecklistDialog(context),

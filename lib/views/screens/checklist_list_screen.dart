@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/navigation/route_observer.dart';
 import '../../viewmodels/checklist_list_viewmodel.dart';
+import '../../viewmodels/selection_viewmodel.dart';
 import '../widgets/checklist_tile.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/new_checklist_dialog.dart';
@@ -21,10 +22,7 @@ class ChecklistListScreen extends StatefulWidget {
 
 class _ChecklistListScreenState extends State<ChecklistListScreen>
     with RouteAware {
-  final Set<String> _selectedIds = {};
   ChecklistListViewModel? _vm;
-
-  bool get _isSelectionMode => _selectedIds.isNotEmpty;
 
   @override
   void didChangeDependencies() {
@@ -67,37 +65,17 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
     unawaited(context.read<ChecklistListViewModel>().loadChecklists());
   }
 
-  void _startSelection(String id) {
-    setState(() {
-      _selectedIds.clear();
-      _selectedIds.add(id);
-    });
-  }
-
-  void _toggleSelection(String id) {
-    setState(() {
-      if (_selectedIds.contains(id)) {
-        _selectedIds.remove(id);
-      } else {
-        _selectedIds.add(id);
-      }
-    });
-  }
-
-  void _clearSelection() {
-    setState(_selectedIds.clear);
-  }
-
   void _resetSelected(BuildContext context, ChecklistListViewModel vm) {
+    final selection = context.read<SelectionNotifier>();
     final originalChecklists = vm.checklists
-        .where((c) => _selectedIds.contains(c.id))
+        .where((c) => selection.selectedIds.contains(c.id))
         .toList();
     final count = originalChecklists.length;
 
     for (final checklist in originalChecklists) {
       unawaited(vm.resetChecklist(checklist.id));
     }
-    _clearSelection();
+    selection.clearSelection();
 
     final message = count == 1
         ? AppStrings.checklistReset
@@ -119,15 +97,16 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
   }
 
   void _deleteSelected(BuildContext context, ChecklistListViewModel vm) {
+    final selection = context.read<SelectionNotifier>();
     final deletedChecklists = vm.checklists
-        .where((c) => _selectedIds.contains(c.id))
+        .where((c) => selection.selectedIds.contains(c.id))
         .toList();
     final count = deletedChecklists.length;
 
     for (final checklist in deletedChecklists) {
       unawaited(vm.deleteChecklist(checklist.id));
     }
-    _clearSelection();
+    selection.clearSelection();
 
     final message = count == 1
         ? AppStrings.checklistDeleted
@@ -150,68 +129,75 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: !_isSelectionMode,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          _clearSelection();
-        }
-      },
-      child: Consumer<ChecklistListViewModel>(
-        builder: (context, vm, _) {
-          return Scaffold(
-            appBar: _isSelectionMode
-                ? AppBar(
-                    leading: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: _clearSelection,
-                    ),
-                    title: Text(
-                      AppStrings.nSelected.replaceFirst(
-                        '{count}',
-                        '${_selectedIds.length}',
-                      ),
-                    ),
-                    actions: [
-                      IconButton(
-                        icon: const Icon(Icons.restart_alt),
-                        tooltip: AppStrings.reset,
-                        onPressed: () => _resetSelected(context, vm),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        tooltip: AppStrings.delete,
-                        onPressed: () => _deleteSelected(context, vm),
-                      ),
-                    ],
-                  )
-                : AppBar(
-                    title: const Text(AppStrings.appTitle),
-                    actions: [
-                      if (widget.showSettingsAction)
-                        IconButton(
-                          icon: const Icon(Icons.settings_outlined),
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/settings'),
+    return Consumer<SelectionNotifier>(
+      builder: (context, selection, _) {
+        return PopScope(
+          canPop: !selection.isSelectionMode,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) {
+              selection.clearSelection();
+            }
+          },
+          child: Consumer<ChecklistListViewModel>(
+            builder: (context, vm, _) {
+              return Scaffold(
+                appBar: selection.isSelectionMode
+                    ? AppBar(
+                        leading: IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: selection.clearSelection,
                         ),
-                    ],
-                  ),
-            body: ChecklistListBody(
-              vm: vm,
-              isSelectionMode: _isSelectionMode,
-              selectedIds: _selectedIds,
-              onToggleSelection: _toggleSelection,
-              onStartSelection: _startSelection,
-            ),
-            floatingActionButton: _isSelectionMode
-                ? null
-                : FloatingActionButton(
-                    onPressed: () => _showNewChecklistDialog(context),
-                    child: const Icon(Icons.add),
-                  ),
-          );
-        },
-      ),
+                        title: Text(
+                          AppStrings.nSelected.replaceFirst(
+                            '{count}',
+                            '${selection.selectedIds.length}',
+                          ),
+                        ),
+                        actions: [
+                          IconButton(
+                            icon: const Icon(Icons.restart_alt),
+                            tooltip: AppStrings.reset,
+                            onPressed: () => _resetSelected(context, vm),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            tooltip: AppStrings.delete,
+                            onPressed: () => _deleteSelected(context, vm),
+                          ),
+                        ],
+                      )
+                    : AppBar(
+                        title: const Text(AppStrings.appTitle),
+                        actions: [
+                          IconButton(
+                            icon: const Icon(Icons.select_all),
+                            tooltip: AppStrings.select,
+                            onPressed: selection.enterSelectionMode,
+                          ),
+                          if (widget.showSettingsAction)
+                            IconButton(
+                              icon: const Icon(Icons.settings_outlined),
+                              onPressed: () =>
+                                  Navigator.pushNamed(context, '/settings'),
+                            ),
+                        ],
+                      ),
+                body: ChecklistListBody(
+                  vm: vm,
+                  selection: selection,
+                  onStartSelection: selection.startSelection,
+                ),
+                floatingActionButton: selection.isSelectionMode
+                    ? null
+                    : FloatingActionButton(
+                        onPressed: () => _showNewChecklistDialog(context),
+                        child: const Icon(Icons.add),
+                      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -229,18 +215,14 @@ class _ChecklistListScreenState extends State<ChecklistListScreen>
 
 class ChecklistListBody extends StatelessWidget {
   final ChecklistListViewModel vm;
-  final bool isSelectionMode;
-  final Set<String> selectedIds;
-  final ValueChanged<String> onToggleSelection;
-  final ValueChanged<String> onStartSelection;
+  final SelectionNotifier selection;
   final ValueChanged<String>? onChecklistTap;
+  final ValueChanged<String> onStartSelection;
 
   const ChecklistListBody({
     super.key,
     required this.vm,
-    required this.isSelectionMode,
-    required this.selectedIds,
-    required this.onToggleSelection,
+    required this.selection,
     required this.onStartSelection,
     this.onChecklistTap,
   });
@@ -268,8 +250,8 @@ class ChecklistListBody extends StatelessWidget {
           key: ValueKey(checklist.id),
           checklist: checklist,
           reorderIndex: index,
-          isSelectionMode: isSelectionMode,
-          isSelected: selectedIds.contains(checklist.id),
+          isSelectionMode: selection.isSelectionMode,
+          isSelected: selection.isSelected(checklist.id),
           onTap: () {
             final customTap = onChecklistTap;
             if (customTap != null) {
@@ -285,7 +267,7 @@ class ChecklistListBody extends StatelessWidget {
             }
           },
           onLongPress: () => onStartSelection(checklist.id),
-          onSelectionTap: () => onToggleSelection(checklist.id),
+          onSelectionTap: () => selection.toggleSelection(checklist.id),
         );
       },
     );

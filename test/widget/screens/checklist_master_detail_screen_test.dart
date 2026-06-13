@@ -8,6 +8,7 @@ import 'package:reusable_checklists/data/models/checklist.dart';
 import 'package:reusable_checklists/data/models/checklist_item.dart';
 import 'package:reusable_checklists/data/repositories/checklist_repository.dart';
 import 'package:reusable_checklists/viewmodels/checklist_list_viewmodel.dart';
+import 'package:reusable_checklists/viewmodels/selection_viewmodel.dart';
 import 'package:reusable_checklists/views/screens/checklist_master_detail_screen.dart';
 
 class MockChecklistRepository extends Mock implements ChecklistRepository {}
@@ -27,6 +28,9 @@ Widget buildWideApp(
         value: repo ?? MockChecklistRepository(),
       ),
       ChangeNotifierProvider<ChecklistListViewModel>.value(value: listVm),
+      ChangeNotifierProvider<SelectionNotifier>(
+        create: (_) => SelectionNotifier(),
+      ),
     ],
     child: MaterialApp(
       theme: AppTheme.lightTheme,
@@ -100,9 +104,7 @@ void main() {
       },
     );
 
-    testWidgets('hides settings icon on wide layout in AppBar', (
-      tester,
-    ) async {
+    testWidgets('hides settings icon on wide layout in AppBar', (tester) async {
       when(() => mockListVm.checklists).thenReturn([]);
 
       await tester.pumpWidget(
@@ -113,6 +115,9 @@ void main() {
             ),
             ChangeNotifierProvider<ChecklistListViewModel>.value(
               value: mockListVm,
+            ),
+            ChangeNotifierProvider<SelectionNotifier>(
+              create: (_) => SelectionNotifier(),
             ),
           ],
           child: MaterialApp(
@@ -338,6 +343,24 @@ void main() {
       await tester.tap(find.text('Travel'));
       await tester.pumpAndSettle();
     });
+
+    testWidgets('select button enters selection mode on wide layout', (
+      tester,
+    ) async {
+      when(() => mockListVm.checklists).thenReturn([
+        Checklist(id: '1', name: 'Groceries', createdAt: DateTime(2024)),
+      ]);
+
+      await tester.pumpWidget(buildWideApp(mockListVm));
+      await tester.pumpAndSettle();
+
+      // Find the select_all icon specifically in the AppBar
+      final selectButton = find.byIcon(Icons.select_all);
+      await tester.tap(selectButton.first);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Checkbox), findsOneWidget);
+    });
   });
 
   group('ChecklistMasterDetailScreen checked count sync', () {
@@ -369,6 +392,9 @@ void main() {
               Provider<ChecklistRepository>.value(value: repo),
               ChangeNotifierProvider<ChecklistListViewModel>.value(
                 value: listVm,
+              ),
+              ChangeNotifierProvider<SelectionNotifier>(
+                create: (_) => SelectionNotifier(),
               ),
             ],
             child: MaterialApp(
@@ -423,6 +449,9 @@ void main() {
           providers: [
             Provider<ChecklistRepository>.value(value: repo),
             ChangeNotifierProvider<ChecklistListViewModel>.value(value: listVm),
+            ChangeNotifierProvider<SelectionNotifier>(
+              create: (_) => SelectionNotifier(),
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
@@ -472,6 +501,9 @@ void main() {
           providers: [
             Provider<ChecklistRepository>.value(value: repo),
             ChangeNotifierProvider<ChecklistListViewModel>.value(value: listVm),
+            ChangeNotifierProvider<SelectionNotifier>(
+              create: (_) => SelectionNotifier(),
+            ),
           ],
           child: MaterialApp(
             theme: AppTheme.lightTheme,

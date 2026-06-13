@@ -101,6 +101,16 @@ class SettingsScreen extends StatelessWidget {
                 }
               },
             ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text(
+                  '${AppStrings.appName} v${AppStrings.appVersion}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ),
           ],
         ),
       ),

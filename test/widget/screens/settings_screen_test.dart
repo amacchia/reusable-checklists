@@ -108,6 +108,15 @@ void main() {
       expect(find.byIcon(Icons.code), findsOneWidget);
     });
 
+    testWidgets('shows app version', (tester) async {
+      await tester.pumpWidget(buildApp(themeVm));
+
+      expect(
+        find.text('${AppStrings.appName} v${AppStrings.appVersion}'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('does not show source code URL', (tester) async {
       await tester.pumpWidget(buildApp(themeVm));
 

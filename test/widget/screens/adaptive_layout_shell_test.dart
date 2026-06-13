@@ -7,6 +7,7 @@ import 'package:reusable_checklists/data/models/checklist.dart';
 import 'package:reusable_checklists/data/repositories/checklist_repository.dart';
 import 'package:reusable_checklists/data/repositories/settings_repository.dart';
 import 'package:reusable_checklists/viewmodels/checklist_list_viewmodel.dart';
+import 'package:reusable_checklists/viewmodels/selection_viewmodel.dart';
 import 'package:reusable_checklists/viewmodels/theme_viewmodel.dart';
 import 'package:reusable_checklists/views/screens/adaptive_layout_shell.dart';
 
@@ -42,6 +43,9 @@ void main() {
             final vm = ChecklistListViewModel(ctx.read<ChecklistRepository>());
             return vm;
           },
+        ),
+        ChangeNotifierProvider<SelectionNotifier>(
+          create: (_) => SelectionNotifier(),
         ),
         Provider<SettingsRepository>.value(value: mockSettingsRepo),
         ChangeNotifierProvider<ThemeViewModel>(
