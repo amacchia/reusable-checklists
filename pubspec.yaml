@@ -1,7 +1,7 @@
 name: reusable_checklists
 description: "An offline-first app for creating and reusing checklists."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 
 environment:
