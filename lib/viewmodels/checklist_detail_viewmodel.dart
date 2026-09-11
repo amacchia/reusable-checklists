@@ -190,6 +190,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     try {
       final master = sortedItems;
       final unchecked = master.where((i) => !i.isChecked).toList();
+      if (newIndex > oldIndex) newIndex--;
       final movedItem = unchecked.removeAt(oldIndex);
       unchecked.insert(newIndex, movedItem);
       var k = 0;

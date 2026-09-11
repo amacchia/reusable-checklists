@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -83,6 +82,7 @@ class ChecklistListViewModel extends ChangeNotifier {
   Future<void> reorderChecklists(int oldIndex, int newIndex) async {
     _errorMessage = null;
     try {
+      if (newIndex > oldIndex) newIndex--;
       final reordered = List<Checklist>.from(_checklists);
       final moved = reordered.removeAt(oldIndex);
       reordered.insert(newIndex, moved);
