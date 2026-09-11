@@ -47,5 +47,10 @@ class AppStrings {
   static const select = 'Select';
   static const selectChecklistSubtitle = 'Choose a checklist from the list';
   static const checklists = 'Checklists';
+  static const searchItems = 'Search items';
+  static const search = 'Search';
+  static const noSearchResults = 'No matching items';
+  static const noSearchResultsSubtitle = 'Try a different search';
+  static const clearSearch = 'Clear search';
   static const appVersion = '1.0.0';
 }

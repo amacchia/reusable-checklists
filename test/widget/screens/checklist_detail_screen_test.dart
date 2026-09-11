@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -6,6 +8,7 @@ import 'package:reusable_checklists/core/constants/app_strings.dart';
 import 'package:reusable_checklists/core/constants/app_theme.dart';
 import 'package:reusable_checklists/data/models/checklist.dart';
 import 'package:reusable_checklists/data/models/checklist_item.dart';
+import 'package:reusable_checklists/data/repositories/checklist_repository.dart';
 import 'package:reusable_checklists/viewmodels/checklist_detail_viewmodel.dart';
 import 'package:reusable_checklists/views/screens/checklist_detail_screen.dart';
 import 'package:reusable_checklists/views/widgets/checklist_item_tile.dart';
@@ -13,6 +16,8 @@ import 'package:reusable_checklists/views/widgets/text_input_dialog.dart';
 
 class MockChecklistDetailViewModel extends Mock
     implements ChecklistDetailViewModel {}
+
+class MockChecklistRepository extends Mock implements ChecklistRepository {}
 
 Widget buildApp(ChecklistDetailViewModel vm) {
   return ChangeNotifierProvider<ChecklistDetailViewModel>.value(
@@ -31,11 +36,17 @@ void main() {
     registerFallbackValue(
       ChecklistItem(id: 'fallback', title: 'fallback', sortIndex: 0),
     );
+    registerFallbackValue(
+      Checklist(id: 'fallback', name: 'fallback', createdAt: DateTime(2024)),
+    );
   });
 
   setUp(() {
     mockVm = MockChecklistDetailViewModel();
     when(() => mockVm.errorMessage).thenReturn(null);
+    when(() => mockVm.isSearchActive).thenReturn(false);
+    when(() => mockVm.hasSearchQuery).thenReturn(false);
+    when(() => mockVm.searchQuery).thenReturn('');
   });
 
   /// Helper to stub all list getters on the mock VM.
@@ -45,6 +56,7 @@ void main() {
     List<ChecklistItem> checked = const [],
   }) {
     when(() => vm.sortedItems).thenReturn([...unchecked, ...checked]);
+    when(() => vm.visibleItems).thenReturn([...unchecked, ...checked]);
     when(() => vm.uncheckedItems).thenReturn(unchecked);
     when(() => vm.checkedItems).thenReturn(checked);
   }
@@ -505,6 +517,267 @@ void main() {
       );
 
       expect(find.byType(ChecklistDetailBody), findsOneWidget);
+    });
+
+    testWidgets('shows search icon in app bar', (tester) async {
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
+      stubItems(mockVm);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      expect(find.byTooltip(AppStrings.search), findsOneWidget);
+    });
+
+    testWidgets('tapping search icon shows search field', (tester) async {
+      when(
+        () => mockVm.checklist,
+      ).thenReturn(Checklist(id: '1', name: 'Test', createdAt: DateTime(2024)));
+      stubItems(mockVm);
+
+      await tester.pumpWidget(buildApp(mockVm));
+
+      await tester.tap(find.byTooltip(AppStrings.search));
+      await tester.pump();
+
+      verify(() => mockVm.openSearch()).called(1);
+    });
+  });
+
+  group('ChecklistDetailScreen search', () {
+    late ChecklistDetailViewModel realVm;
+    late MockChecklistRepository mockRepository;
+
+    setUp(() {
+      mockRepository = MockChecklistRepository();
+      realVm = ChecklistDetailViewModel(mockRepository);
+    });
+
+    Future<void> pumpDetail(WidgetTester tester, Checklist checklist) async {
+      when(
+        () => mockRepository.getChecklistById('1'),
+      ).thenAnswer((_) async => checklist);
+      when(() => mockRepository.saveChecklist(any())).thenAnswer((_) async {});
+      unawaited(realVm.loadChecklist('1'));
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ChecklistDetailViewModel>.value(
+          value: realVm,
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const ChecklistDetailScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Checklist checklistWith(List<ChecklistItem> items) {
+      return Checklist(
+        id: '1',
+        name: 'Test',
+        createdAt: DateTime(2024),
+        items: items,
+      );
+    }
+
+    testWidgets('typing filters items case-insensitively by substring', (
+      tester,
+    ) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Buy Milk', sortIndex: 0),
+        ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
+        ChecklistItem(id: 'c', title: 'oat milk', sortIndex: 2),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      expect(find.text('Buy Milk'), findsOneWidget);
+      expect(find.text('Eggs'), findsOneWidget);
+      expect(find.text('oat milk'), findsOneWidget);
+
+      realVm.searchQuery = 'MILK';
+      await tester.pumpAndSettle();
+
+      expect(find.text('Buy Milk'), findsOneWidget);
+      expect(find.text('oat milk'), findsOneWidget);
+      expect(find.text('Eggs'), findsNothing);
+    });
+
+    testWidgets('clearing the query restores the full list', (tester) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+        ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      realVm.searchQuery = 'milk';
+      await tester.pumpAndSettle();
+      expect(find.text('Eggs'), findsNothing);
+
+      realVm.searchQuery = '';
+      await tester.pumpAndSettle();
+
+      expect(find.text('Milk'), findsOneWidget);
+      expect(find.text('Eggs'), findsOneWidget);
+    });
+
+    testWidgets('filtered results respect check state sections', (
+      tester,
+    ) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+        ChecklistItem(id: 'b', title: 'Bread', sortIndex: 1, isChecked: true),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      realVm.searchQuery = 'bread';
+      await tester.pumpAndSettle();
+
+      expect(find.text('Milk'), findsNothing);
+      expect(find.text('Bread'), findsOneWidget);
+      expect(find.text(AppStrings.completed), findsOneWidget);
+    });
+
+    testWidgets('shows no results empty state when nothing matches', (
+      tester,
+    ) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      realVm.searchQuery = 'zzz';
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.noSearchResults), findsOneWidget);
+      expect(find.text('Milk'), findsNothing);
+    });
+
+    testWidgets('shows empty items state when checklist has no items', (
+      tester,
+    ) async {
+      await pumpDetail(tester, checklistWith([]));
+
+      expect(find.text(AppStrings.emptyItems), findsOneWidget);
+    });
+
+    testWidgets('hides drag handles while search is active', (tester) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+        ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      expect(find.byIcon(Icons.drag_handle), findsNWidgets(2));
+
+      realVm.searchQuery = 'milk';
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.drag_handle), findsNothing);
+    });
+
+    testWidgets('typing in search field updates vm.searchQuery', (
+      tester,
+    ) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      realVm.openSearch();
+      await tester.pumpAndSettle();
+
+      final searchField = find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(searchField, 'milk');
+      await tester.pump();
+
+      expect(realVm.searchQuery, 'milk');
+      expect(find.text('Milk'), findsOneWidget);
+    });
+
+    testWidgets('close search resets query and shows full list', (
+      tester,
+    ) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+        ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      realVm.openSearch();
+      realVm.searchQuery = 'milk';
+      await tester.pumpAndSettle();
+      expect(find.text('Eggs'), findsNothing);
+
+      realVm.closeSearch();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Milk'), findsOneWidget);
+      expect(find.text('Eggs'), findsOneWidget);
+      expect(find.byTooltip(AppStrings.search), findsOneWidget);
+    });
+
+    testWidgets('toggle still works on filtered items', (tester) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+        ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      realVm.searchQuery = 'milk';
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(Checkbox));
+      await tester.pumpAndSettle();
+
+      expect(
+        realVm.checklist!.items.firstWhere((i) => i.id == 'a').isChecked,
+        true,
+      );
+      expect(find.text(AppStrings.completed), findsOneWidget);
+    });
+
+    testWidgets('delete still works on filtered items', (tester) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+        ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      realVm.searchQuery = 'milk';
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+
+      expect(realVm.checklist!.items.any((i) => i.id == 'a'), false);
+      expect(find.text(AppStrings.itemDeleted), findsOneWidget);
+    });
+
+    testWidgets('reordering is blocked while search filter is active', (
+      tester,
+    ) async {
+      final checklist = checklistWith([
+        ChecklistItem(id: 'a', title: 'Milk A', sortIndex: 0),
+        ChecklistItem(id: 'b', title: 'Milk B', sortIndex: 1),
+      ]);
+      await pumpDetail(tester, checklist);
+
+      realVm.searchQuery = 'milk';
+      await tester.pumpAndSettle();
+
+      await realVm.reorderItems(0, 1);
+      await tester.pumpAndSettle();
+
+      verifyNever(() => mockRepository.saveChecklist(any()));
+      expect(realVm.sortedItems.map((i) => i.title).toList(), [
+        'Milk A',
+        'Milk B',
+      ]);
     });
   });
 }
