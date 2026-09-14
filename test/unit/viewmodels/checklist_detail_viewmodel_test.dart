@@ -805,7 +805,33 @@ void main() {
     });
 
     group('reorderItems', () {
-      test('moves unchecked item from index 0 to index 2', () async {
+      test(
+        'moves item to last position when newIndex is list length',
+        () async {
+          final checklist = makeChecklist();
+          when(
+            () => mockRepository.getChecklistById('1'),
+          ).thenAnswer((_) async => checklist);
+          when(
+            () => mockRepository.saveChecklist(any()),
+          ).thenAnswer((_) async {});
+
+          await viewModel.loadChecklist('1');
+          await viewModel.reorderItems(0, 3);
+
+          final sorted = viewModel.sortedItems;
+          expect(sorted.map((i) => i.title).toList(), [
+            'Item B',
+            'Item C',
+            'Item A',
+          ]);
+          expect(sorted[0].sortIndex, 0);
+          expect(sorted[1].sortIndex, 1);
+          expect(sorted[2].sortIndex, 2);
+        },
+      );
+
+      test('moves item down when newIndex is greater than oldIndex', () async {
         final checklist = makeChecklist();
         when(
           () => mockRepository.getChecklistById('1'),
@@ -815,13 +841,13 @@ void main() {
         ).thenAnswer((_) async {});
 
         await viewModel.loadChecklist('1');
-        await viewModel.reorderItems(0, 2); // move A after C
+        await viewModel.reorderItems(0, 2);
 
         final sorted = viewModel.sortedItems;
         expect(sorted.map((i) => i.title).toList(), [
           'Item B',
-          'Item C',
           'Item A',
+          'Item C',
         ]);
         expect(sorted[0].sortIndex, 0);
         expect(sorted[1].sortIndex, 1);
