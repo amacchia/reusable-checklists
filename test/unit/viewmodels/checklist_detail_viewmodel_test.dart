@@ -498,6 +498,208 @@ void main() {
       });
     });
 
+    group('search', () {
+      test('visibleItems returns all items when query is empty', () async {
+        final checklist = makeChecklist();
+        when(
+          () => mockRepository.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+
+        expect(viewModel.visibleItems, hasLength(3));
+      });
+
+      test('visibleItems is empty when checklist is null', () {
+        expect(viewModel.visibleItems, isEmpty);
+      });
+
+      test('filters items by case-insensitive substring', () async {
+        final checklist = makeChecklist(
+          items: [
+            ChecklistItem(id: 'a', title: 'Buy Milk', sortIndex: 0),
+            ChecklistItem(id: 'b', title: 'eggs', sortIndex: 1),
+            ChecklistItem(id: 'c', title: 'Bread', sortIndex: 2),
+            ChecklistItem(id: 'd', title: 'OAT MILK', sortIndex: 3),
+          ],
+        );
+        when(
+          () => mockRepository.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        viewModel.searchQuery = 'mIlK';
+
+        expect(viewModel.visibleItems.map((i) => i.title).toList(), [
+          'Buy Milk',
+          'OAT MILK',
+        ]);
+      });
+
+      test('uncheckedItems and checkedItems respect search filter', () async {
+        final checklist = makeChecklist(
+          items: [
+            ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+            ChecklistItem(
+              id: 'b',
+              title: 'Bread',
+              sortIndex: 1,
+              isChecked: true,
+            ),
+            ChecklistItem(id: 'c', title: 'Milk Bread', sortIndex: 2),
+          ],
+        );
+        when(
+          () => mockRepository.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        viewModel.searchQuery = 'bread';
+
+        expect(viewModel.uncheckedItems.map((i) => i.title).toList(), [
+          'Milk Bread',
+        ]);
+        expect(viewModel.checkedItems.map((i) => i.title).toList(), ['Bread']);
+      });
+
+      test('visibleItems keeps sort order of matching items', () async {
+        final checklist = makeChecklist(
+          items: [
+            ChecklistItem(id: 'c', title: 'Milk C', sortIndex: 2),
+            ChecklistItem(id: 'a', title: 'Milk A', sortIndex: 0),
+            ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
+          ],
+        );
+        when(
+          () => mockRepository.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        viewModel.searchQuery = 'milk';
+
+        expect(viewModel.visibleItems.map((i) => i.title).toList(), [
+          'Milk A',
+          'Milk C',
+        ]);
+      });
+
+      test('returns empty list when nothing matches', () async {
+        final checklist = makeChecklist();
+        when(
+          () => mockRepository.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        viewModel.searchQuery = 'zzz';
+
+        expect(viewModel.visibleItems, isEmpty);
+      });
+
+      test('clearing the query restores the full list', () async {
+        final checklist = makeChecklist();
+        when(
+          () => mockRepository.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        viewModel.searchQuery = 'Item A';
+        expect(viewModel.visibleItems, hasLength(1));
+
+        viewModel.searchQuery = '';
+        expect(viewModel.visibleItems, hasLength(3));
+      });
+
+      test('setting the same query does not notify', () async {
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+        viewModel.searchQuery = 'same';
+        viewModel.searchQuery = 'same';
+
+        expect(notified, 1);
+      });
+
+      test('openSearch activates search and notifies', () {
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+
+        expect(viewModel.isSearchActive, false);
+
+        viewModel.openSearch();
+
+        expect(viewModel.isSearchActive, true);
+        expect(notified, 1);
+      });
+
+      test('openSearch is a no-op when already active', () {
+        viewModel.openSearch();
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+
+        viewModel.openSearch();
+
+        expect(notified, 0);
+      });
+
+      test('closeSearch resets query and deactivates', () {
+        viewModel.openSearch();
+        viewModel.searchQuery = 'milk';
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+
+        viewModel.closeSearch();
+
+        expect(viewModel.isSearchActive, false);
+        expect(viewModel.searchQuery, '');
+        expect(notified, 1);
+      });
+
+      test('closeSearch is a no-op when inactive and empty', () {
+        var notified = 0;
+        viewModel.addListener(() => notified++);
+
+        viewModel.closeSearch();
+
+        expect(notified, 0);
+      });
+
+      test('reorderItems is ignored while a search query is active', () async {
+        final checklist = makeChecklist();
+        when(
+          () => mockRepository.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+        when(
+          () => mockRepository.saveChecklist(any()),
+        ).thenAnswer((_) async {});
+
+        await viewModel.loadChecklist('1');
+        viewModel.searchQuery = 'Item';
+        await viewModel.reorderItems(0, 2);
+
+        expect(viewModel.sortedItems.map((i) => i.title).toList(), [
+          'Item A',
+          'Item B',
+          'Item C',
+        ]);
+        verifyNever(() => mockRepository.saveChecklist(any()));
+      });
+
+      test('loadChecklist resets search state', () async {
+        final checklist = makeChecklist();
+        when(
+          () => mockRepository.getChecklistById('1'),
+        ).thenAnswer((_) async => checklist);
+
+        await viewModel.loadChecklist('1');
+        viewModel.openSearch();
+        viewModel.searchQuery = 'milk';
+
+        await viewModel.loadChecklist('1');
+
+        expect(viewModel.isSearchActive, false);
+        expect(viewModel.searchQuery, '');
+      });
+    });
+
     group('clearError', () {
       test('clears errorMessage and notifies', () async {
         when(

@@ -73,15 +73,19 @@ class ChecklistDetailAppBar extends StatelessWidget
   Widget build(BuildContext context) {
     return Selector<
       ChecklistDetailViewModel,
-      ({String name, bool isEmpty, bool hasChecklist})
+      ({String name, bool isEmpty, bool hasChecklist, bool isSearchActive})
     >(
       selector: (_, vm) => (
         name: vm.checklist?.name ?? '',
         isEmpty: vm.sortedItems.isEmpty,
         hasChecklist: vm.checklist != null,
+        isSearchActive: vm.isSearchActive,
       ),
       builder: (context, data, _) {
         final vm = context.read<ChecklistDetailViewModel>();
+        if (data.isSearchActive) {
+          return _SearchField(vm: vm);
+        }
         return AppBar(
           title: InkWell(
             onTap: data.hasChecklist
@@ -106,6 +110,11 @@ class ChecklistDetailAppBar extends StatelessWidget
               onPressed: data.isEmpty ? null : vm.uncheckAll,
               icon: const Icon(Icons.remove_done),
               tooltip: AppStrings.uncheckAll,
+            ),
+            IconButton(
+              onPressed: vm.openSearch,
+              icon: const Icon(Icons.search),
+              tooltip: AppStrings.search,
             ),
           ],
         );
@@ -134,6 +143,68 @@ class ChecklistDetailAppBar extends StatelessWidget
   }
 }
 
+class _SearchField extends StatefulWidget {
+  final ChecklistDetailViewModel vm;
+
+  const _SearchField({required this.vm});
+
+  @override
+  State<_SearchField> createState() => _SearchFieldState();
+}
+
+class _SearchFieldState extends State<_SearchField> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.vm.searchQuery);
+    _focusNode = FocusNode()..requestFocus();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      leading: IconButton(
+        onPressed: widget.vm.closeSearch,
+        icon: const Icon(Icons.arrow_back),
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+      ),
+      titleSpacing: 0,
+      title: TextField(
+        controller: _controller,
+        focusNode: _focusNode,
+        decoration: const InputDecoration(
+          hintText: AppStrings.searchItems,
+          border: InputBorder.none,
+        ),
+        textInputAction: TextInputAction.search,
+        onChanged: (value) => widget.vm.searchQuery = value,
+      ),
+      actions: [
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _controller,
+          builder: (context, value, _) {
+            return IconButton(
+              onPressed: value.text.isEmpty ? null : _controller.clear,
+              icon: const Icon(Icons.clear),
+              tooltip: AppStrings.clearSearch,
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
 class ChecklistDetailBody extends StatelessWidget {
   final bool constrainWidth;
 
@@ -145,14 +216,22 @@ class ChecklistDetailBody extends StatelessWidget {
     if (vm.checklist == null) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
+    final hasItems = vm.sortedItems.isNotEmpty;
+    final hasVisibleItems = vm.visibleItems.isNotEmpty;
     final content = Column(
       children: [
         Expanded(
-          child: vm.sortedItems.isEmpty
+          child: !hasItems
               ? const EmptyStateWidget(
                   title: AppStrings.emptyItems,
                   subtitle: AppStrings.emptyItemsSubtitle,
                   icon: Icons.playlist_add,
+                )
+              : !hasVisibleItems
+              ? const EmptyStateWidget(
+                  title: AppStrings.noSearchResults,
+                  subtitle: AppStrings.noSearchResultsSubtitle,
+                  icon: Icons.search_off,
                 )
               : const _ItemLists(),
         ),
@@ -175,6 +254,7 @@ class _ItemLists extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final unchecked = vm.uncheckedItems;
     final checked = vm.checkedItems;
+    final reorderEnabled = !vm.hasSearchQuery;
 
     return CustomScrollView(
       slivers: [
@@ -186,7 +266,7 @@ class _ItemLists extends StatelessWidget {
             return ChecklistItemTile(
               key: ValueKey(item.id),
               item: item,
-              reorderIndex: index,
+              reorderIndex: reorderEnabled ? index : null,
               onToggle: () => vm.toggleItem(item.id),
               onEdit: () => _editItem(context, vm, item),
               onDelete: () => _deleteItem(context, vm, item.id),
