@@ -528,4 +528,72 @@ void main() {
       expect(find.text('0 / 2 checked'), findsOneWidget);
     });
   });
+
+  group('ChecklistMasterDetailScreen item search', () {
+    Widget buildWideAppWithRepo(
+      ChecklistListViewModel listVm,
+      ChecklistRepository repo,
+    ) {
+      return MultiProvider(
+        providers: [
+          Provider<ChecklistRepository>.value(value: repo),
+          ChangeNotifierProvider<ChecklistListViewModel>.value(value: listVm),
+          ChangeNotifierProvider<SelectionNotifier>(
+            create: (_) => SelectionNotifier(),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const SizedBox(
+            width: 1000,
+            height: 800,
+            child: ChecklistMasterDetailScreen(),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('search filters items in detail panel on wide layout', (
+      tester,
+    ) async {
+      final repo = MockChecklistRepository();
+      final checklist = Checklist(
+        id: '1',
+        name: 'Groceries',
+        createdAt: DateTime(2024),
+        items: [
+          ChecklistItem(id: 'a', title: 'Milk', sortIndex: 0),
+          ChecklistItem(id: 'b', title: 'Eggs', sortIndex: 1),
+        ],
+      );
+      when(repo.getAllChecklists).thenAnswer((_) async => [checklist]);
+      when(() => repo.saveChecklist(any())).thenAnswer((_) async {});
+      when(() => repo.getChecklistById('1')).thenAnswer((_) async => checklist);
+
+      final listVm = ChecklistListViewModel(repo);
+      await listVm.loadChecklists();
+
+      await tester.pumpWidget(buildWideAppWithRepo(listVm, repo));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Groceries'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Milk'), findsOneWidget);
+      expect(find.text('Eggs'), findsOneWidget);
+
+      await tester.tap(find.byTooltip(AppStrings.search));
+      await tester.pumpAndSettle();
+
+      final searchField = find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(searchField, 'MILK');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Milk'), findsOneWidget);
+      expect(find.text('Eggs'), findsNothing);
+    });
+  });
 }

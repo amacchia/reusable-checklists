@@ -14,9 +14,14 @@ class ChecklistDetailViewModel extends ChangeNotifier {
 
   Checklist? _checklist;
   String? _errorMessage;
+  bool _isSearchActive = false;
+  String _searchQuery = '';
 
   Checklist? get checklist => _checklist;
   String? get errorMessage => _errorMessage;
+  bool get isSearchActive => _isSearchActive;
+  String get searchQuery => _searchQuery;
+  bool get hasSearchQuery => _searchQuery.isNotEmpty;
 
   List<ChecklistItem> get sortedItems {
     if (_checklist == null) return [];
@@ -25,11 +30,39 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     return items;
   }
 
+  List<ChecklistItem> get visibleItems {
+    final items = sortedItems;
+    if (!hasSearchQuery) return items;
+    final query = _searchQuery.toLowerCase();
+    return items
+        .where((item) => item.title.toLowerCase().contains(query))
+        .toList();
+  }
+
   List<ChecklistItem> get uncheckedItems =>
-      sortedItems.where((i) => !i.isChecked).toList();
+      visibleItems.where((i) => !i.isChecked).toList();
 
   List<ChecklistItem> get checkedItems =>
-      sortedItems.where((i) => i.isChecked).toList();
+      visibleItems.where((i) => i.isChecked).toList();
+
+  void openSearch() {
+    if (_isSearchActive) return;
+    _isSearchActive = true;
+    notifyListeners();
+  }
+
+  void closeSearch() {
+    if (!_isSearchActive && _searchQuery.isEmpty) return;
+    _isSearchActive = false;
+    _searchQuery = '';
+    notifyListeners();
+  }
+
+  set searchQuery(String value) {
+    if (_searchQuery == value) return;
+    _searchQuery = value;
+    notifyListeners();
+  }
 
   void clearError() {
     if (_errorMessage == null) return;
@@ -39,6 +72,8 @@ class ChecklistDetailViewModel extends ChangeNotifier {
 
   Future<void> loadChecklist(String id) async {
     _errorMessage = null;
+    _isSearchActive = false;
+    _searchQuery = '';
     try {
       _checklist = await _repository.getChecklistById(id);
       notifyListeners();
@@ -185,7 +220,7 @@ class ChecklistDetailViewModel extends ChangeNotifier {
   }
 
   Future<void> reorderItems(int oldIndex, int newIndex) async {
-    if (_checklist == null) return;
+    if (_checklist == null || hasSearchQuery) return;
     _errorMessage = null;
     try {
       final master = sortedItems;
