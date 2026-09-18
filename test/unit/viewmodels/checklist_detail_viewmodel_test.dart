@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:reusable_checklists/data/models/checklist.dart';
@@ -817,7 +819,9 @@ void main() {
           ).thenAnswer((_) async {});
 
           await viewModel.loadChecklist('1');
-          await viewModel.reorderItems(0, 3);
+          // onReorderItem delivers pre-adjusted indices: dragging item 0 to
+          // the end of a 3-item list reports (0, 2), not (0, 3).
+          await viewModel.reorderItems(0, 2);
 
           final sorted = viewModel.sortedItems;
           expect(sorted.map((i) => i.title).toList(), [
@@ -841,7 +845,8 @@ void main() {
         ).thenAnswer((_) async {});
 
         await viewModel.loadChecklist('1');
-        await viewModel.reorderItems(0, 2);
+        // onReorderItem pre-adjusts newIndex, so (0, 1) inserts A after B.
+        await viewModel.reorderItems(0, 1);
 
         final sorted = viewModel.sortedItems;
         expect(sorted.map((i) => i.title).toList(), [
@@ -947,6 +952,42 @@ void main() {
         await viewModel.reorderItems(0, 1);
         verifyNever(() => mockRepository.saveChecklist(any()));
       });
+
+      test(
+        'updates state before persisting so the UI does not flash the old order',
+        () async {
+          final checklist = makeChecklist();
+          when(
+            () => mockRepository.getChecklistById('1'),
+          ).thenAnswer((_) async => checklist);
+          final saveCompleter = Completer<void>();
+          final events = <String>[];
+          when(() => mockRepository.saveChecklist(any())).thenAnswer((_) {
+            events.add('save');
+            return saveCompleter.future;
+          });
+          viewModel.addListener(() => events.add('notify'));
+
+          await viewModel.loadChecklist('1');
+          events.clear();
+
+          // SliverReorderableList tears down its drag proxy as soon as
+          // onReorderItem returns. The new order must be published (notify)
+          // before the save starts, or the dragged tile flashes back to its
+          // old slot before snapping into place.
+          final future = viewModel.reorderItems(0, 2);
+          expect(events, ['notify', 'save']);
+          expect(viewModel.sortedItems.map((i) => i.title).toList(), [
+            'Item B',
+            'Item C',
+            'Item A',
+          ]);
+
+          saveCompleter.complete();
+          await future;
+          expect(viewModel.errorMessage, isNull);
+        },
+      );
 
       test('sets errorMessage on failure', () async {
         final checklist = makeChecklist();

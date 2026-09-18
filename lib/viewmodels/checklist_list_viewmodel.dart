@@ -82,7 +82,8 @@ class ChecklistListViewModel extends ChangeNotifier {
   Future<void> reorderChecklists(int oldIndex, int newIndex) async {
     _errorMessage = null;
     try {
-      if (newIndex > oldIndex) newIndex--;
+      // onReorderItem delivers a pre-adjusted newIndex: the index the item
+      // should have after being removed from oldIndex. Use it as-is.
       final reordered = List<Checklist>.from(_checklists);
       final moved = reordered.removeAt(oldIndex);
       reordered.insert(newIndex, moved);

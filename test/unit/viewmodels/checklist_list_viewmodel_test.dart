@@ -166,7 +166,9 @@ void main() {
           ).thenAnswer((_) async {});
 
           await viewModel.loadChecklists();
-          await viewModel.reorderChecklists(0, 3);
+          // onReorderItem delivers pre-adjusted indices: dragging item 0 to
+          // the end of a 3-item list reports (0, 2), not (0, 3).
+          await viewModel.reorderChecklists(0, 2);
 
           expect(viewModel.checklists.map((c) => c.id).toList(), [
             'b',
@@ -206,7 +208,8 @@ void main() {
           ).thenAnswer((_) async {});
 
           await viewModel.loadChecklists();
-          await viewModel.reorderChecklists(0, 2);
+          // onReorderItem pre-adjusts newIndex, so (0, 1) inserts A after B.
+          await viewModel.reorderChecklists(0, 1);
 
           expect(viewModel.checklists.map((c) => c.id).toList(), [
             'b',
