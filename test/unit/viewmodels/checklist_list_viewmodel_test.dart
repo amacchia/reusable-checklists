@@ -142,7 +142,89 @@ void main() {
     });
 
     group('reorderChecklists', () {
-      test('reorders and reassigns sortIndex', () async {
+      test(
+        'moves checklist to last position when newIndex is list length',
+        () async {
+          final a = Checklist(id: 'a', name: 'A', createdAt: DateTime(2024));
+          final b = Checklist(
+            id: 'b',
+            name: 'B',
+            createdAt: DateTime(2024, 2),
+            sortIndex: 1,
+          );
+          final c = Checklist(
+            id: 'c',
+            name: 'C',
+            createdAt: DateTime(2024, 3),
+            sortIndex: 2,
+          );
+          when(
+            () => mockRepository.getAllChecklists(),
+          ).thenAnswer((_) async => [a, b, c]);
+          when(
+            () => mockRepository.saveChecklist(any()),
+          ).thenAnswer((_) async {});
+
+          await viewModel.loadChecklists();
+          // onReorderItem delivers pre-adjusted indices: dragging item 0 to
+          // the end of a 3-item list reports (0, 2), not (0, 3).
+          await viewModel.reorderChecklists(0, 2);
+
+          expect(viewModel.checklists.map((c) => c.id).toList(), [
+            'b',
+            'c',
+            'a',
+          ]);
+          expect(viewModel.checklists.map((c) => c.sortIndex).toList(), [
+            0,
+            1,
+            2,
+          ]);
+          verify(() => mockRepository.saveChecklist(any())).called(3);
+        },
+      );
+
+      test(
+        'moves checklist down when newIndex is greater than oldIndex',
+        () async {
+          final a = Checklist(id: 'a', name: 'A', createdAt: DateTime(2024));
+          final b = Checklist(
+            id: 'b',
+            name: 'B',
+            createdAt: DateTime(2024, 2),
+            sortIndex: 1,
+          );
+          final c = Checklist(
+            id: 'c',
+            name: 'C',
+            createdAt: DateTime(2024, 3),
+            sortIndex: 2,
+          );
+          when(
+            () => mockRepository.getAllChecklists(),
+          ).thenAnswer((_) async => [a, b, c]);
+          when(
+            () => mockRepository.saveChecklist(any()),
+          ).thenAnswer((_) async {});
+
+          await viewModel.loadChecklists();
+          // onReorderItem pre-adjusts newIndex, so (0, 1) inserts A after B.
+          await viewModel.reorderChecklists(0, 1);
+
+          expect(viewModel.checklists.map((c) => c.id).toList(), [
+            'b',
+            'a',
+            'c',
+          ]);
+          expect(viewModel.checklists.map((c) => c.sortIndex).toList(), [
+            0,
+            1,
+            2,
+          ]);
+        },
+      );
+
+      test('moves checklist up when newIndex is less than oldIndex', () async {
         final a = Checklist(id: 'a', name: 'A', createdAt: DateTime(2024));
         final b = Checklist(
           id: 'b',
@@ -164,15 +246,14 @@ void main() {
         ).thenAnswer((_) async {});
 
         await viewModel.loadChecklists();
-        await viewModel.reorderChecklists(0, 2); // move A to the end
+        await viewModel.reorderChecklists(2, 0);
 
-        expect(viewModel.checklists.map((c) => c.id).toList(), ['b', 'c', 'a']);
+        expect(viewModel.checklists.map((c) => c.id).toList(), ['c', 'a', 'b']);
         expect(viewModel.checklists.map((c) => c.sortIndex).toList(), [
           0,
           1,
           2,
         ]);
-        verify(() => mockRepository.saveChecklist(any())).called(3);
       });
 
       test('sets errorMessage on failure', () async {

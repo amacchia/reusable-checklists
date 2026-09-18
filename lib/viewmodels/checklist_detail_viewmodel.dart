@@ -225,6 +225,8 @@ class ChecklistDetailViewModel extends ChangeNotifier {
     try {
       final master = sortedItems;
       final unchecked = master.where((i) => !i.isChecked).toList();
+      // onReorderItem delivers a pre-adjusted newIndex: the index the item
+      // should have after being removed from oldIndex. Use it as-is.
       final movedItem = unchecked.removeAt(oldIndex);
       unchecked.insert(newIndex, movedItem);
       var k = 0;
@@ -236,8 +238,8 @@ class ChecklistDetailViewModel extends ChangeNotifier {
       }
       _checklist!.items = rebuilt;
       _checklist!.markUpdated();
-      await _repository.saveChecklist(_checklist!);
       notifyListeners();
+      await _repository.saveChecklist(_checklist!);
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
