@@ -24,7 +24,7 @@ Also check `git log --oneline -5` to understand what's being released.
 
 ### 2. Bump the version
 
-Edit `pubspec.yaml` line 4 (currently `version: 1.0.0+2`). Format is
+Edit `pubspec.yaml` line 4 (currently `version: 1.1.0+3`). Format is
 `versionName+versionCode`:
 
 - Increment `versionName` semantically (patch for fixes, minor for features).
@@ -34,7 +34,19 @@ Edit `pubspec.yaml` line 4 (currently `version: 1.0.0+2`). Format is
 
 Confirm the new version with the user before building.
 
-### 3. Run quality gates (in order)
+### 3. Sync the in-app version string
+
+Update `appVersion` in `lib/core/constants/app_strings.dart` to match the
+new `versionName` from `pubspec.yaml` (the semver part, without the
+`+versionCode`):
+
+```dart
+static const appVersion = '1.1.0';  // must match pubspec.yaml versionName
+```
+
+Run `dart analyze --fatal-infos` after editing to confirm nothing broke.
+
+### 4. Run quality gates (in order)
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs  # only if Hive models changed
@@ -44,7 +56,7 @@ dart analyze --fatal-infos
 
 If tests or analysis fail, stop and fix before building.
 
-### 4. Build the release bundle
+### 5. Build the release bundle
 
 ```bash
 flutter build appbundle --release
@@ -52,7 +64,7 @@ flutter build appbundle --release
 
 Output lands at `build/app/outputs/bundle/release/app-release.aab`.
 
-### 5. Sanity-check the artifact
+### 6. Sanity-check the artifact
 
 ```bash
 ls -lh build/app/outputs/bundle/release/app-release.aab
@@ -70,7 +82,7 @@ $ANDROID_HOME/build-tools/<ver>/aapt dump badging \
 (If `aapt` isn't available, skip this — the build step already validates
 the bundle internally.)
 
-### 6. What must be done manually (remind the user)
+### 7. What must be done manually (remind the user)
 
 - Open <https://play.google.com/console> → the app → **Production** →
   **Create new release**.
@@ -89,6 +101,6 @@ the bundle internally.)
   `key.properties` or the keystore; if a build unexpectedly falls back,
   stop and ask the user.
 - CI (`dart analyze --fatal-infos`, 95% coverage) runs on every push —
-  gates in step 3 mirror CI so a passing local build means a green CI.
+  gates in step 4 mirror CI so a passing local build means a green CI.
 - After a successful upload, the user may want to tag the release
   (e.g. `v1.0.1`) — ask before creating any git tag or commit.
