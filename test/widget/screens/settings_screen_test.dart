@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -114,6 +116,23 @@ void main() {
       expect(
         find.text('${AppStrings.appName} v${AppStrings.appVersion}'),
         findsOneWidget,
+      );
+    });
+
+    testWidgets('appVersion matches pubspec.yaml version', (tester) async {
+      final yaml = File('pubspec.yaml').readAsStringSync();
+      final match = RegExp(
+        r'^version:\s*(\d+\.\d+\.\d+)\+',
+        multiLine: true,
+      ).firstMatch(yaml);
+
+      expect(match, isNotNull, reason: 'pubspec.yaml has no version line');
+      expect(
+        AppStrings.appVersion,
+        match!.group(1),
+        reason:
+            'appVersion is out of sync with pubspec.yaml '
+            '— see publish-play-store skill step 3',
       );
     });
 

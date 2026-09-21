@@ -52,5 +52,5 @@ class AppStrings {
   static const noSearchResults = 'No matching items';
   static const noSearchResultsSubtitle = 'Try a different search';
   static const clearSearch = 'Clear search';
-  static const appVersion = '1.0.0';
+  static const appVersion = '1.1.0';
 }
